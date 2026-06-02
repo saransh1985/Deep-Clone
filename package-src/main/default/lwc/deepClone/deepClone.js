@@ -493,7 +493,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     try {
       const result = await cloneFacility({
         recordId: this.recordId,
-        request: { ...this.form }
+        request: this.buildCloneRequest()
       });
       this.applyResultSteps(result.steps || []);
       this.completedStepIndex = STEP_LABELS.length - 1;
@@ -519,6 +519,23 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   handleCancel() {
     this.dispatchEvent(new CloseActionScreenEvent());
+  }
+
+  /**
+   * Purpose: Builds an Apex-safe request, using null for blank date values so Aura can bind the Date fields.
+   */
+  buildCloneRequest() {
+    return {
+      ...this.form,
+      newStartDate:
+        this.form.startDateChanging && this.form.newStartDate
+          ? this.form.newStartDate
+          : null,
+      newEndDate:
+        this.form.endDateChanging && this.form.newEndDate
+          ? this.form.newEndDate
+          : null
+    };
   }
 
   /**
