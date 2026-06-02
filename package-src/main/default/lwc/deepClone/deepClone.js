@@ -93,13 +93,41 @@ const QUESTION_FIELDS = [
 ];
 
 const REQUIRED_VALUE_CHECKS = [
-  ["facilityNameChanging", "newFacilityName", "New Facility Name is required."],
-  ["startDateChanging", "newStartDate", "New Start Date is required."],
-  ["endDateChanging", "newEndDate", "New End Date is required."],
-  ["wdfaChanging", "newWdfa", "New WDFA is required."],
-  ["facilityIdChanging", "newFacilityId", "New Facility ID is required."],
-  ["acpNumberChanging", "newAcpNumber", "New ACP Number is required."],
-  ["dsrIdChanging", "newDsrId", "New DSR ID is required."]
+  {
+    toggleField: "facilityNameChanging",
+    valueField: "newFacilityName",
+    message: "New Facility Name is required."
+  },
+  {
+    toggleField: "startDateChanging",
+    valueField: "newStartDate",
+    message: "New Start Date is required."
+  },
+  {
+    toggleField: "endDateChanging",
+    valueField: "newEndDate",
+    message: "New End Date is required."
+  },
+  {
+    toggleField: "wdfaChanging",
+    valueField: "newWdfa",
+    message: "New WDFA is required."
+  },
+  {
+    toggleField: "facilityIdChanging",
+    valueField: "newFacilityId",
+    message: "New Facility ID is required."
+  },
+  {
+    toggleField: "acpNumberChanging",
+    valueField: "newAcpNumber",
+    message: "New ACP Number is required."
+  },
+  {
+    toggleField: "dsrIdChanging",
+    valueField: "newDsrId",
+    message: "New DSR ID is required."
+  }
 ];
 
 export default class DeepClone extends NavigationMixin(LightningElement) {
@@ -133,6 +161,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   isCloning = false;
   loadError;
   cloneError;
+  fieldErrors = {};
   activeStepIndex = 0;
   completedStepIndex = -1;
   resultStepCounts = {};
@@ -228,7 +257,13 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
         city: this.form.newCity,
         province: this.form.newState,
         postalCode: this.form.newPostalCode,
-        country: this.form.newCountry
+        country: this.form.newCountry,
+        errorMessage: isAddress
+          ? this.fieldErrors.address
+          : this.fieldErrors[fieldConfig.valueField],
+        hasError: !!(isAddress
+          ? this.fieldErrors.address
+          : this.fieldErrors[fieldConfig.valueField])
       };
     });
   }
@@ -391,10 +426,21 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   handleToggle(event) {
     const field = event.target.dataset.field;
+    const fieldConfig = QUESTION_FIELDS.find(
+      ({ toggleField }) => toggleField === field
+    );
+    const errors = { ...this.fieldErrors };
+    if (!event.target.checked && fieldConfig) {
+      delete errors[fieldConfig.valueField];
+      if (fieldConfig.kind === "address") {
+        delete errors.address;
+      }
+    }
     this.form = {
       ...this.form,
       [field]: event.target.checked
     };
+    this.fieldErrors = errors;
   }
 
   /**
@@ -402,16 +448,21 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   handleInput(event) {
     const field = event.target.dataset.field;
+    const errors = { ...this.fieldErrors };
+    delete errors[field];
     this.form = {
       ...this.form,
       [field]: event.target.value
     };
+    this.fieldErrors = errors;
   }
 
   /**
    * Purpose: Stores the composite address parts entered through lightning-input-address.
    */
   handleAddressInput(event) {
+    const errors = { ...this.fieldErrors };
+    delete errors.address;
     this.form = {
       ...this.form,
       newStreet: event.target.street || "",
@@ -420,6 +471,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       newPostalCode: event.target.postalCode || "",
       newCountry: event.target.country || ""
     };
+    this.fieldErrors = errors;
   }
 
   /**
@@ -427,6 +479,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   async handleStart() {
     this.cloneError = undefined;
+    this.fieldErrors = {};
     if (!this.validate()) {
       return;
     }
@@ -478,16 +531,15 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       return false;
     }
 
-    for (const [toggleField, valueField, message] of REQUIRED_VALUE_CHECKS) {
+    const errors = {};
+    for (const { toggleField, valueField, message } of REQUIRED_VALUE_CHECKS) {
       if (this.form[toggleField] && !`${this.form[valueField] || ""}`.trim()) {
-        this.cloneError = message;
-        return false;
+        errors[valueField] = message;
       }
     }
 
     if (this.form.addressChanging && !this.hasAddressInput()) {
-      this.cloneError = "Enter at least one new address value.";
-      return false;
+      errors.address = "Enter at least one new address value.";
     }
 
     const startDate = this.form.startDateChanging
@@ -499,7 +551,11 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       startDate &&
       this.form.newEndDate < startDate
     ) {
-      this.cloneError = "New End Date cannot be before New Start Date.";
+      errors.newEndDate = "New End Date cannot be before New Start Date.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      this.fieldErrors = errors;
       return false;
     }
     return true;

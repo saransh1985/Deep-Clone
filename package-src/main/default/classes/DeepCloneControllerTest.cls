@@ -181,6 +181,14 @@ private class DeepCloneControllerTest {
           System.assertEquals(Date.today(), newAsset.get('InstallDate'));
         }
       }
+      if (hasField('Asset', 'Name')) {
+        for (SObject newAsset : newAssets) {
+          System.assertEquals(
+            'AHS IAM | Deep Clone Test Facility New',
+            newAsset.get('Name')
+          );
+        }
+      }
       if (isFieldReadable('Asset', 'eHS_Source_System_Id__c')) {
         for (SObject oldAsset : oldAssets) {
           System.assertEquals(null, oldAsset.get('eHS_Source_System_Id__c'));
@@ -190,6 +198,36 @@ private class DeepCloneControllerTest {
         }
       }
     }
+
+    assertAccountRelationshipRoles(facility.Id, result.newAccountId);
+  }
+
+  @IsTest
+  static void facilityNameDrivenChildNamesUseRequestedConventions() {
+    System.assertEquals(
+      'AHS IAM | New Facility',
+      DeepCloneController.buildAssetName('New Facility')
+    );
+    System.assertEquals(
+      'New Facility | Program Coordinator',
+      DeepCloneController.buildCareProgramTeamMemberName(
+        'New Facility',
+        'Program Coordinator'
+      )
+    );
+    System.assertEquals(
+      'Dr. Ada Lovelace | Primary Practitioner | New Facility',
+      DeepCloneController.buildHealthcarePractitionerFacilityName(
+        'Dr. Ada Lovelace',
+        'Primary Practitioner',
+        'New Facility'
+      )
+    );
+    assertPicklistLabelLookup('CareProgramTeamMember', 'Role');
+    assertPicklistLabelLookup(
+      'HealthcarePractitionerFacility',
+      'eHS_HCPF_Role__c'
+    );
   }
 
   @IsTest
@@ -598,6 +636,104 @@ private class DeepCloneControllerTest {
     }
     return Database.query(
       'SELECT Id FROM HealthcareFacility WHERE AccountId = :accountId'
+    );
+  }
+
+  private static void assertAccountRelationshipRoles(
+    Id oldAccountId,
+    Id newAccountId
+  ) {
+    if (
+      !hasObject('HealthCloudGA__AccountAccountRelation__c') ||
+      !hasField(
+        'HealthCloudGA__AccountAccountRelation__c',
+        'HealthCloudGA__Account__c'
+      ) ||
+      !hasField(
+        'HealthCloudGA__AccountAccountRelation__c',
+        'HealthCloudGA__RelatedAccount__c'
+      ) ||
+      !hasField(
+        'HealthCloudGA__AccountAccountRelation__c',
+        'HealthCloudGA__Role__c'
+      ) ||
+      !hasObject('HealthCloudGA__ReciprocalRole__c')
+    ) {
+      return;
+    }
+
+    List<SObject> relations = Database.query(
+      'SELECT Id, HealthCloudGA__Account__c, HealthCloudGA__RelatedAccount__c, HealthCloudGA__Role__c ' +
+        'FROM HealthCloudGA__AccountAccountRelation__c ' +
+        'WHERE (HealthCloudGA__Account__c = :oldAccountId AND HealthCloudGA__RelatedAccount__c = :newAccountId) ' +
+        'OR (HealthCloudGA__Account__c = :newAccountId AND HealthCloudGA__RelatedAccount__c = :oldAccountId)'
+    );
+    System.assert(
+      relations.size() >= 2,
+      'Deep Clone should create both old-to-new and new-to-old relationship rows.'
+    );
+
+    Set<Id> roleIds = new Set<Id>();
+    for (SObject relation : relations) {
+      roleIds.add((Id) relation.get('HealthCloudGA__Role__c'));
+    }
+    Map<Id, String> roleNamesById = reciprocalRoleNames(roleIds);
+
+    Boolean hasOldToNew = false;
+    Boolean hasNewToOld = false;
+    for (SObject relation : relations) {
+      Id accountId = (Id) relation.get('HealthCloudGA__Account__c');
+      String roleName = roleNamesById.get(
+        (Id) relation.get('HealthCloudGA__Role__c')
+      );
+      if (accountId == oldAccountId && roleName == 'New Facility') {
+        hasOldToNew = true;
+      }
+      if (accountId == newAccountId && roleName == 'Old Facility') {
+        hasNewToOld = true;
+      }
+    }
+    System.assert(hasOldToNew, 'Old Facility page should link to New Facility.');
+    System.assert(hasNewToOld, 'New Facility page should link to Old Facility.');
+  }
+
+  private static Map<Id, String> reciprocalRoleNames(Set<Id> roleIds) {
+    Map<Id, String> namesById = new Map<Id, String>();
+    if (roleIds == null || roleIds.isEmpty()) {
+      return namesById;
+    }
+    for (SObject role : Database.query(
+      'SELECT Id, Name FROM HealthCloudGA__ReciprocalRole__c WHERE Id IN :roleIds'
+    )) {
+      namesById.put((Id) role.get('Id'), String.valueOf(role.get('Name')));
+    }
+    return namesById;
+  }
+
+  private static void assertPicklistLabelLookup(
+    String objectName,
+    String fieldName
+  ) {
+    if (!hasField(objectName, fieldName)) {
+      return;
+    }
+
+    Schema.DescribeFieldResult fieldDescribe = getFieldDescribe(
+      objectName,
+      fieldName
+    );
+    if (fieldDescribe.getPicklistValues().isEmpty()) {
+      return;
+    }
+
+    Schema.PicklistEntry entry = fieldDescribe.getPicklistValues()[0];
+    System.assertEquals(
+      entry.getLabel(),
+      DeepCloneController.getPicklistLabel(
+        objectName,
+        fieldName,
+        entry.getValue()
+      )
     );
   }
 

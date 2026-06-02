@@ -8,8 +8,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   private static final String HEALTHCARE_FACILITY_OBJECT = 'HealthcareFacility';
   private static final String RELATION_OBJECT = 'HealthCloudGA__AccountAccountRelation__c';
   private static final String RELATION_ROLE_OBJECT = 'HealthCloudGA__ReciprocalRole__c';
-  private static final String RELATION_ROLE_NAME = 'Deep Clone Replacement Facility';
-  private static final String RELATION_INVERSE_ROLE_NAME = 'Deep Clone Source Facility';
+  private static final String NEW_FACILITY_ROLE_NAME = 'New Facility';
+  private static final String OLD_FACILITY_ROLE_NAME = 'Old Facility';
+  private static final String ASSET_NAME_PREFIX = 'AHS IAM';
   private static Map<String, Schema.SObjectType> globalDescribeCache;
   private static Map<String, Schema.DescribeSObjectResult> objectDescribeCache = new Map<String, Schema.DescribeSObjectResult>();
   private static Map<String, Map<String, Schema.SObjectField>> fieldMapCache = new Map<String, Map<String, Schema.SObjectField>>();
@@ -390,6 +391,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       );
 
       Id newAccountId = (Id) newAccount.get('Id');
+      String newFacilityName = getString(newAccount, 'Name');
+      Boolean renameChildRecords = request.facilityNameChanging == true;
       result.newAccountId = newAccountId;
       result.steps.add(new CloneStep('Facility', 1));
       result.steps.add(
@@ -411,7 +414,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         recordId,
         newAccountId,
         today,
-        nowValue
+        nowValue,
+        newFacilityName,
+        renameChildRecords
       );
       result.steps.add(
         new CloneStep('Care Program Team Members', careProgramCount)
@@ -422,7 +427,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         recordId,
         newAccountId,
         today,
-        nowValue
+        nowValue,
+        newFacilityName,
+        renameChildRecords
       );
       result.steps.add(
         new CloneStep(
@@ -436,7 +443,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         recordId,
         newAccountId,
         today,
-        nowValue
+        nowValue,
+        newFacilityName,
+        false
       );
       result.steps.add(
         new CloneStep('Business Licenses', businessLicenseCount)
@@ -447,7 +456,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         recordId,
         newAccountId,
         today,
-        nowValue
+        nowValue,
+        newFacilityName,
+        renameChildRecords
       );
       result.steps.add(new CloneStep('Assets', assetCount));
 
@@ -2002,7 +2013,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Id oldAccountId,
     Id newAccountId,
     Date today,
-    Datetime nowValue
+    Datetime nowValue,
+    String newFacilityName,
+    Boolean renameChildRecords
   ) {
     if (!canCloneObject(config)) {
       return 0;
@@ -2021,6 +2034,10 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     List<SObject> updates = new List<SObject>();
     List<SObject> inserts = new List<SObject>();
     List<FeedItem> feedItems = new List<FeedItem>();
+    Map<Id, String> practitionerNamesById = practitionerNamesById(
+      config,
+      oldRows
+    );
 
     for (SObject oldRow : oldRows) {
       String sourceSystemId = getString(oldRow, 'eHS_Source_System_Id__c');
@@ -2031,6 +2048,14 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       copyCreateableFields(oldRow, clone);
       setCreateValue(clone, config.accountField, newAccountId);
       applyNewChildValues(config, clone, today, nowValue);
+      applyFacilityNameDrivenChildName(
+        config,
+        oldRow,
+        clone,
+        newFacilityName,
+        renameChildRecords,
+        practitionerNamesById
+      );
       if (newHealthcareFacilityId != null) {
         setCreateValue(clone, 'HealthcareFacilityId', newHealthcareFacilityId);
       }
@@ -2163,7 +2188,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Id oldAccountId,
     Id newAccountId,
     Date today,
-    Datetime nowValue
+    Datetime nowValue,
+    String newFacilityName,
+    Boolean renameChildRecords
   ) {
     if (!canCloneObject(config)) {
       return 0;
@@ -2221,6 +2248,13 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         copyCreateableFields(source, clone);
         setCreateValue(clone, config.accountField, newAccountId);
         applyNewChildValues(config, clone, today, nowValue);
+        if (renameChildRecords == true) {
+          setCreateValue(
+            clone,
+            'Name',
+            buildAssetName(newFacilityName)
+          );
+        }
         setCreateValue(
           clone,
           'eHS_Source_System_Id__c',
@@ -2287,6 +2321,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     if (config.hierarchyClone && hasField(config.objectName, 'ParentId')) {
       fields.add('ParentId');
     }
+    addChildNamingFields(config, fields);
 
     List<String> fieldList = validFieldList(config.objectName, fields);
     String soql =
@@ -2302,6 +2337,28 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       new Map<String, Object>{ 'oldAccountId' => oldAccountId },
       AccessLevel.USER_MODE
     );
+  }
+
+  /**
+   * Purpose: Ensures fields needed for Facility-name-based clone names are read when they exist.
+   */
+  private static void addChildNamingFields(
+    ChildCloneConfig config,
+    Set<String> fields
+  ) {
+    if (config == null || fields == null) {
+      return;
+    }
+    if (hasField(config.objectName, 'Name')) {
+      fields.add('Name');
+    }
+    if (config.objectName == 'CareProgramTeamMember') {
+      fields.add('Role');
+    }
+    if (config.objectName == 'HealthcarePractitionerFacility') {
+      fields.add('PractitionerId');
+      fields.add('eHS_HCPF_Role__c');
+    }
   }
 
   /**
@@ -2350,6 +2407,149 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     for (String fieldName : config.newValues.keySet()) {
       setCreateValue(clone, fieldName, config.newValues.get(fieldName));
     }
+  }
+
+  /**
+   * Purpose: Applies clone names that depend on the replacement Facility name.
+   */
+  private static void applyFacilityNameDrivenChildName(
+    ChildCloneConfig config,
+    SObject oldRow,
+    SObject clone,
+    String newFacilityName,
+    Boolean renameChildRecords,
+    Map<Id, String> practitionerNamesById
+  ) {
+    if (
+      renameChildRecords != true ||
+      config == null ||
+      !hasField(config.objectName, 'Name')
+    ) {
+      return;
+    }
+
+    String nameValue;
+    if (config.objectName == 'CareProgramTeamMember') {
+      nameValue = buildCareProgramTeamMemberName(
+        newFacilityName,
+        getPicklistLabel(config.objectName, 'Role', getString(oldRow, 'Role'))
+      );
+    } else if (config.objectName == 'HealthcarePractitionerFacility') {
+      Id practitionerId = getId(oldRow, 'PractitionerId');
+      nameValue = buildHealthcarePractitionerFacilityName(
+        practitionerNamesById == null
+          ? null
+          : practitionerNamesById.get(practitionerId),
+        getPicklistLabel(
+          config.objectName,
+          'eHS_HCPF_Role__c',
+          getString(oldRow, 'eHS_HCPF_Role__c')
+        ),
+        newFacilityName
+      );
+    }
+
+    if (!String.isBlank(nameValue)) {
+      setCreateValue(clone, 'Name', nameValue);
+    }
+  }
+
+  /**
+   * Purpose: Builds the cloned Asset name from the new Facility name.
+   */
+  @TestVisible
+  private static String buildAssetName(String newFacilityName) {
+    return limitLength(
+      joinNameParts(new List<String>{ ASSET_NAME_PREFIX, newFacilityName }),
+      255
+    );
+  }
+
+  /**
+   * Purpose: Builds the cloned Healthcare Practitioner Facility name.
+   */
+  @TestVisible
+  private static String buildHealthcarePractitionerFacilityName(
+    String practitionerName,
+    String roleLabel,
+    String newFacilityName
+  ) {
+    return limitLength(
+      joinNameParts(
+        new List<String>{ practitionerName, roleLabel, newFacilityName }
+      ),
+      255
+    );
+  }
+
+  /**
+   * Purpose: Builds the cloned Care Program Team Member name.
+   */
+  @TestVisible
+  private static String buildCareProgramTeamMemberName(
+    String newFacilityName,
+    String roleLabel
+  ) {
+    return limitLength(
+      joinNameParts(new List<String>{ newFacilityName, roleLabel }),
+      255
+    );
+  }
+
+  /**
+   * Purpose: Joins nonblank name parts with the requested separator.
+   */
+  private static String joinNameParts(List<String> parts) {
+    List<String> cleanParts = new List<String>();
+    if (parts != null) {
+      for (String part : parts) {
+        if (!String.isBlank(part)) {
+          cleanParts.add(part.trim());
+        }
+      }
+    }
+    return String.join(cleanParts, ' | ');
+  }
+
+  /**
+   * Purpose: Returns Contact names for Healthcare Practitioner Facility practitioner lookups.
+   */
+  private static Map<Id, String> practitionerNamesById(
+    ChildCloneConfig config,
+    List<SObject> oldRows
+  ) {
+    Map<Id, String> namesById = new Map<Id, String>();
+    if (
+      config == null ||
+      config.objectName != 'HealthcarePractitionerFacility' ||
+      oldRows == null ||
+      oldRows.isEmpty() ||
+      !hasObject('Contact') ||
+      !isObjectReadable('Contact') ||
+      !isFieldReadable('Contact', 'Name')
+    ) {
+      return namesById;
+    }
+
+    Set<Id> practitionerIds = new Set<Id>();
+    for (SObject oldRow : oldRows) {
+      Id practitionerId = getId(oldRow, 'PractitionerId');
+      if (practitionerId != null) {
+        practitionerIds.add(practitionerId);
+      }
+    }
+    if (practitionerIds.isEmpty()) {
+      return namesById;
+    }
+
+    for (SObject contactRow : Database.queryWithBinds(
+      'SELECT Id, Name FROM Contact WHERE Id IN :practitionerIds',
+      new Map<String, Object>{ 'practitionerIds' => practitionerIds },
+      AccessLevel.USER_MODE
+    )) {
+      namesById.put((Id) contactRow.get('Id'), getString(contactRow, 'Name'));
+    }
+    return namesById;
   }
 
   /**
@@ -2422,10 +2622,17 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       return 0;
     }
 
-    Id roleId = getOrCreateAccountRelationRole();
-    if (roleId == null) {
+    Id newFacilityRoleId = getOrCreateAccountRelationRole(
+      NEW_FACILITY_ROLE_NAME,
+      OLD_FACILITY_ROLE_NAME
+    );
+    Id oldFacilityRoleId = getOrCreateAccountRelationRole(
+      OLD_FACILITY_ROLE_NAME,
+      NEW_FACILITY_ROLE_NAME
+    );
+    if (newFacilityRoleId == null || oldFacilityRoleId == null) {
       throw new CloneException(
-        'Unable to find or create an Account-Account Relationship role.'
+        'Unable to find or create Account-Account Relationship roles.'
       );
     }
 
@@ -2436,7 +2643,11 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       'HealthCloudGA__RelatedAccount__c',
       newAccountId
     );
-    setCreateValue(forwardRelation, 'HealthCloudGA__Role__c', roleId);
+    setCreateValue(
+      forwardRelation,
+      'HealthCloudGA__Role__c',
+      newFacilityRoleId
+    );
     setCreateValue(forwardRelation, 'HealthCloudGA__Active__c', true);
     setCreateValue(forwardRelation, 'HealthCloudGA__StartDate__c', today);
     setCreateValue(
@@ -2445,27 +2656,62 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       'DeepClone-' + oldAccountId + '-' + newAccountId + '-forward'
     );
 
-    SObject reverseRelation = newSObject(RELATION_OBJECT);
-    setCreateValue(reverseRelation, 'HealthCloudGA__Account__c', newAccountId);
-    setCreateValue(
-      reverseRelation,
-      'HealthCloudGA__RelatedAccount__c',
-      oldAccountId
-    );
-    setCreateValue(reverseRelation, 'HealthCloudGA__Role__c', roleId);
-    setCreateValue(reverseRelation, 'HealthCloudGA__Active__c', true);
-    setCreateValue(reverseRelation, 'HealthCloudGA__StartDate__c', today);
-    setCreateValue(
-      reverseRelation,
-      'HealthCloudGA__ExternalId__c',
-      'DeepClone-' + newAccountId + '-' + oldAccountId + '-reverse'
+    saveRecords(
+      new List<SObject>{ forwardRelation },
+      false,
+      'linking old facility to new facility'
     );
 
-    List<SObject> relations = new List<SObject>{
-      forwardRelation,
-      reverseRelation
-    };
-    saveRecords(relations, false, 'linking old and new facilities');
+    SObject reverseRelation = findAccountRelationship(
+      newAccountId,
+      oldAccountId
+    );
+    Boolean createdReverseRelation = false;
+    if (reverseRelation == null) {
+      reverseRelation = newSObject(RELATION_OBJECT);
+      setCreateValue(
+        reverseRelation,
+        'HealthCloudGA__Account__c',
+        newAccountId
+      );
+      setCreateValue(
+        reverseRelation,
+        'HealthCloudGA__RelatedAccount__c',
+        oldAccountId
+      );
+      setCreateValue(reverseRelation, 'HealthCloudGA__Active__c', true);
+      setCreateValue(reverseRelation, 'HealthCloudGA__StartDate__c', today);
+      setCreateValue(
+        reverseRelation,
+        'HealthCloudGA__ExternalId__c',
+        'DeepClone-' + newAccountId + '-' + oldAccountId + '-reverse'
+      );
+      createdReverseRelation = true;
+    }
+
+    if (createdReverseRelation) {
+      setCreateValue(
+        reverseRelation,
+        'HealthCloudGA__Role__c',
+        oldFacilityRoleId
+      );
+      saveRecords(
+        new List<SObject>{ reverseRelation },
+        false,
+        'linking new facility to old facility'
+      );
+    } else {
+      setUpdateValue(
+        reverseRelation,
+        'HealthCloudGA__Role__c',
+        oldFacilityRoleId
+      );
+      saveRecords(
+        new List<SObject>{ reverseRelation },
+        true,
+        'updating new-to-old facility relationship role'
+      );
+    }
 
     SObject forwardUpdate = newSObject(RELATION_OBJECT);
     forwardUpdate.put('Id', forwardRelation.get('Id'));
@@ -2491,14 +2737,34 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
+   * Purpose: Finds an Account-Account relationship by direction after Health Cloud may have created an inverse row.
+   */
+  private static SObject findAccountRelationship(Id accountId, Id relatedAccountId) {
+    List<SObject> relations = Database.queryWithBinds(
+      'SELECT Id, HealthCloudGA__Role__c, HealthCloudGA__InverseRelationship__c ' +
+        'FROM ' +
+        RELATION_OBJECT +
+        ' WHERE HealthCloudGA__Account__c = :accountId AND HealthCloudGA__RelatedAccount__c = :relatedAccountId ORDER BY CreatedDate DESC LIMIT 1',
+      new Map<String, Object>{
+        'accountId' => accountId,
+        'relatedAccountId' => relatedAccountId
+      },
+      AccessLevel.USER_MODE
+    );
+    return relations.isEmpty() ? null : relations[0];
+  }
+
+  /**
    * Purpose: Finds or creates the reciprocal role used by the Account-to-Account relationship records.
    */
-  private static Id getOrCreateAccountRelationRole() {
+  private static Id getOrCreateAccountRelationRole(
+    String roleName,
+    String inverseRoleName
+  ) {
     if (!hasObject(RELATION_ROLE_OBJECT)) {
       return null;
     }
 
-    String roleName = RELATION_ROLE_NAME;
     String relationshipType = 'Account Account Relation';
     List<SObject> existingRoles = Database.query(
       'SELECT Id FROM ' +
@@ -2510,7 +2776,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     }
 
     SObject role = newSObject(RELATION_ROLE_OBJECT);
-    setCreateValue(role, 'Name', RELATION_ROLE_NAME);
+    setCreateValue(role, 'Name', roleName);
     setCreateValue(
       role,
       'RecordTypeId',
@@ -2524,13 +2790,13 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     setCreateValue(
       role,
       'HealthCloudGA__InverseRole__c',
-      RELATION_INVERSE_ROLE_NAME
+      inverseRoleName
     );
     setCreateValue(role, 'HealthCloudGA__CreateInverseRole__c', false);
     saveRecords(
       new List<SObject>{ role },
       false,
-      'creating the Deep Clone Account relationship role'
+      'creating the Deep Clone Account relationship role ' + roleName
     );
     return (Id) role.get('Id');
   }
@@ -3058,6 +3324,36 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       }
     }
     return false;
+  }
+
+  /**
+   * Purpose: Returns a picklist entry label for a stored API value.
+   */
+  @TestVisible
+  private static String getPicklistLabel(
+    String objectName,
+    String fieldName,
+    String value
+  ) {
+    String normalizedValue = trimToNull(value);
+    if (normalizedValue == null) {
+      return null;
+    }
+
+    Schema.DescribeFieldResult fieldDescribe = getFieldDescribe(
+      objectName,
+      fieldName
+    );
+    if (fieldDescribe == null) {
+      return normalizedValue;
+    }
+
+    for (Schema.PicklistEntry entry : fieldDescribe.getPicklistValues()) {
+      if (entry.getValue() == normalizedValue) {
+        return entry.getLabel();
+      }
+    }
+    return normalizedValue;
   }
 
   /**

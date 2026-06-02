@@ -1,17 +1,22 @@
+.panel-body,
+:host {
+  font-size: 0.8125rem;
+}
+
 .panel-body {
-  padding: 0 0 3.25rem;
+  padding: 0 0 2.25rem;
 }
 
 .account-summary {
   border-bottom: 1px solid #d8dde6;
-  margin: 0 0 0.55rem;
-  padding: 0 0 0.45rem;
+  margin: 0 0 0.35rem;
+  padding: 0 0 0.3rem;
 }
 
 .eyebrow,
 .field-label {
   color: #5f6a7d;
-  font-size: 0.72rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.2;
@@ -21,7 +26,7 @@
 
 .account-name {
   color: #181818;
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.25;
   margin: 0;
@@ -30,7 +35,7 @@
 
 h3 {
   color: #181818;
-  font-size: 1rem;
+  font-size: 0.92rem;
   font-weight: 700;
   line-height: 1.3;
   margin: 0;
@@ -41,8 +46,8 @@ h3 {
 }
 
 .identifier-panel {
-  margin-bottom: 0.55rem;
-  padding: 0.45rem 0.25rem;
+  margin-bottom: 0.35rem;
+  padding: 0.3rem 0.2rem;
 }
 
 .identifier-item {
@@ -51,7 +56,7 @@ h3 {
 
 .field-value {
   color: #181818;
-  font-size: 0.92rem;
+  font-size: 0.8rem;
   font-weight: 700;
   line-height: 1.3;
   margin: 0;
@@ -61,14 +66,14 @@ h3 {
 
 .questions {
   display: grid;
-  gap: 0.4rem;
+  gap: 0.25rem;
 }
 
 .question-row {
   background: #ffffff;
   border: 1px solid #d8dde6;
   border-radius: 0.25rem;
-  padding: 0.3rem 0.25rem;
+  padding: 0.18rem 0.2rem;
 }
 
 .question-control,
@@ -83,16 +88,23 @@ h3 {
 }
 
 .carry-forward {
-  min-height: 2.3rem;
-  padding: 0.35rem 0.55rem;
+  min-height: 1.75rem;
+  padding: 0.22rem 0.45rem;
 }
 
 .clone-alert {
-  margin-top: 0.75rem;
+  margin: 0 0 0.35rem;
+}
+
+.field-error {
+  color: #ba0517;
+  font-size: 0.72rem;
+  line-height: 1.2;
+  margin: 0.15rem 0 0;
 }
 
 .state {
-  padding: 0.5rem 0 0.75rem;
+  padding: 0.35rem 0 0.55rem;
 }
 
 .state_center {
@@ -188,9 +200,9 @@ h3 {
 .footer-actions {
   align-items: center;
   display: flex;
-  gap: 0.5rem;
+  gap: 0.4rem;
   justify-content: flex-end;
-  padding: 0.15rem 0 0.35rem;
+  padding: 0.1rem 0 0.2rem;
 }
 
 @media (max-width: 42rem) {
