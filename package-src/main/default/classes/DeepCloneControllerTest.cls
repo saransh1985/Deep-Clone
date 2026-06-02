@@ -75,7 +75,7 @@ private class DeepCloneControllerTest {
     ];
 
     Date newStartDate = Date.today().addDays(2);
-    Date newEndDate = Date.today().addYears(1);
+    Date requestedEndDate = Date.today().addYears(1);
     DeepCloneController.CloneRequest request = new DeepCloneController.CloneRequest();
     request.facilityNameChanging = true;
     request.newFacilityName = 'Deep Clone Test Facility New';
@@ -88,7 +88,7 @@ private class DeepCloneControllerTest {
     request.startDateChanging = true;
     request.newStartDate = newStartDate;
     request.endDateChanging = true;
-    request.newEndDate = newEndDate;
+    request.newEndDate = requestedEndDate;
     request.wdfaChanging = true;
     request.newWdfa = 'WDFA-NEW';
     request.facilityIdChanging = false;
@@ -129,7 +129,16 @@ private class DeepCloneControllerTest {
       );
     }
     if (hasField('Account', 'EndDate')) {
-      System.assertEquals(newEndDate, dateValue(newFacility.get('EndDate')));
+      System.assertEquals(
+        Date.today(),
+        dateValue(oldFacility.get('EndDate')),
+        'The old Facility should be ended during Deep Clone.'
+      );
+      System.assertEquals(
+        null,
+        dateValue(newFacility.get('EndDate')),
+        'The new Facility should stay open-ended even when an EndDate value is sent.'
+      );
     }
     if (hasField('Account', 'eHS_WDFA__c')) {
       System.assertEquals(null, oldFacility.get('eHS_WDFA__c'));

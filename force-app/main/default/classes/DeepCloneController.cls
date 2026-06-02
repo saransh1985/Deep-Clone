@@ -647,10 +647,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       values,
       new List<String>{ 'newStartDate', 'startDate', 'EffectiveDate' }
     );
-    request.newEndDate = readDateValue(
-      values,
-      new List<String>{ 'newEndDate', 'endDate', 'EndDate' }
-    );
     request.newWdfa = readStringValue(
       values,
       new List<String>{ 'newWdfa', 'wdfa', 'eHS_WDFA__c' }
@@ -699,14 +695,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         'changeStartDate'
       }
     );
-    Boolean explicitEndDateChanging = readBooleanValue(
-      values,
-      new List<String>{
-        'endDateChanging',
-        'isEndDateChanging',
-        'changeEndDate'
-      }
-    );
     Boolean explicitWdfaChanging = readBooleanValue(
       values,
       new List<String>{ 'wdfaChanging', 'isWdfaChanging', 'changeWdfa' }
@@ -741,7 +729,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         explicitStartDateChanging,
         request.newStartDate
       ) ||
-      needsCallableDateComparison(explicitEndDateChanging, request.newEndDate) ||
       needsCallableComparison(explicitWdfaChanging, request.newWdfa) ||
       needsCallableComparison(
         explicitFacilityIdChanging,
@@ -764,7 +751,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
             'BillingPostalCode',
             'BillingCountry',
             'EffectiveDate',
-            'EndDate',
             'eHS_WDFA__c',
             'eHS_Facility_Id__c',
             'eHS_ACPNumber__c',
@@ -789,12 +775,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       request.newStartDate,
       oldAccount,
       'EffectiveDate'
-    );
-    request.endDateChanging = resolveCallableDateChangeFlag(
-      explicitEndDateChanging,
-      request.newEndDate,
-      oldAccount,
-      'EndDate'
     );
     request.wdfaChanging = resolveCallableChangeFlag(
       explicitWdfaChanging,
@@ -1359,8 +1339,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       request.newStartDate,
       'Start Date'
     );
-    requireNewDateValue(request.endDateChanging, request.newEndDate, 'End Date');
-    validateRequestedDateRange(request);
     requireNewValue(request.wdfaChanging, request.newWdfa, 'WDFA');
     requireNewValue(
       request.facilityIdChanging,
@@ -1425,23 +1403,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       throw new CloneException(
         label + ' is marked as changing. Enter the new date.'
       );
-    }
-  }
-
-  /**
-   * Purpose: Prevents the new Facility from starting after its requested end date.
-   */
-  private static void validateRequestedDateRange(CloneRequest request) {
-    Date effectiveStartDate = request.startDateChanging == true
-      ? request.newStartDate
-      : Date.today();
-    if (
-      effectiveStartDate != null &&
-      request.endDateChanging == true &&
-      request.newEndDate != null &&
-      request.newEndDate < effectiveStartDate
-    ) {
-      throw new CloneException('End Date cannot be before Start Date.');
     }
   }
 
@@ -1904,11 +1865,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       'EffectiveDate',
       request.startDateChanging == true ? request.newStartDate : nowValue.date()
     );
-    setCreateDateValue(
-      newAccount,
-      'EndDate',
-      request.endDateChanging == true ? request.newEndDate : null
-    );
+    setCreateDateValue(newAccount, 'EndDate', null);
     setCreateValue(
       newAccount,
       'eHS_WDFA__c',
