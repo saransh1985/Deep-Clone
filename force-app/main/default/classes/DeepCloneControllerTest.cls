@@ -16,6 +16,11 @@ private class DeepCloneControllerTest {
       Datetime.now().addDays(-30),
       true
     );
+    putIfWriteable(facility, 'BillingStreet', '100 Old Facility Rd', true);
+    putIfWriteable(facility, 'BillingCity', 'Old City', true);
+    putIfWriteable(facility, 'BillingState', 'BC', true);
+    putIfWriteable(facility, 'BillingPostalCode', 'V1V 1V1', true);
+    putIfWriteable(facility, 'BillingCountry', 'Canada', true);
     putIfWriteable(facility, 'eHS_WDFA__c', 'WDFA-OLD', true);
     putIfWriteable(facility, 'eHS_Facility_Id__c', 'FAC001', true);
     putIfWriteable(facility, 'eHS_ACPNumber__c', 'ACP001', true);
@@ -51,6 +56,10 @@ private class DeepCloneControllerTest {
 
     System.assertEquals(facility.Id, context.accountId);
     System.assertEquals(true, context.isFacility);
+    System.assertEquals(OLD_ACCOUNT_NAME, context.facilityName);
+    if (hasField('Account', 'BillingStreet')) {
+      System.assertEquals('100 Old Facility Rd', context.street);
+    }
     if (hasField('Account', 'eHS_WDFA__c')) {
       System.assertEquals('WDFA-OLD', context.wdfa);
     }
@@ -65,7 +74,21 @@ private class DeepCloneControllerTest {
       LIMIT 1
     ];
 
+    Date newStartDate = Date.today().addDays(2);
+    Date newEndDate = Date.today().addYears(1);
     DeepCloneController.CloneRequest request = new DeepCloneController.CloneRequest();
+    request.facilityNameChanging = true;
+    request.newFacilityName = 'Deep Clone Test Facility New';
+    request.addressChanging = true;
+    request.newStreet = '200 New Facility Ave';
+    request.newCity = 'New City';
+    request.newState = 'AB';
+    request.newPostalCode = 'T2T 2T2';
+    request.newCountry = 'Canada';
+    request.startDateChanging = true;
+    request.newStartDate = newStartDate;
+    request.endDateChanging = true;
+    request.newEndDate = newEndDate;
     request.wdfaChanging = true;
     request.newWdfa = 'WDFA-NEW';
     request.facilityIdChanging = false;
@@ -88,6 +111,26 @@ private class DeepCloneControllerTest {
 
     System.assertEquals(false, oldFacility.get('IsActive'));
     System.assertEquals(true, newFacility.get('IsActive'));
+    System.assertEquals('Deep Clone Test Facility New', newFacility.get('Name'));
+    if (hasField('Account', 'BillingStreet')) {
+      System.assertEquals(
+        '200 New Facility Ave',
+        newFacility.get('BillingStreet')
+      );
+      System.assertEquals('New City', newFacility.get('BillingCity'));
+      System.assertEquals('AB', newFacility.get('BillingState'));
+      System.assertEquals('T2T 2T2', newFacility.get('BillingPostalCode'));
+      System.assertEquals('Canada', newFacility.get('BillingCountry'));
+    }
+    if (hasField('Account', 'EffectiveDate')) {
+      System.assertEquals(
+        newStartDate,
+        dateValue(newFacility.get('EffectiveDate'))
+      );
+    }
+    if (hasField('Account', 'EndDate')) {
+      System.assertEquals(newEndDate, dateValue(newFacility.get('EndDate')));
+    }
     if (hasField('Account', 'eHS_WDFA__c')) {
       System.assertEquals(null, oldFacility.get('eHS_WDFA__c'));
       System.assertEquals('WDFA-NEW', newFacility.get('eHS_WDFA__c'));
@@ -495,6 +538,11 @@ private class DeepCloneControllerTest {
       'Id',
       'Name',
       'IsActive',
+      'BillingStreet',
+      'BillingCity',
+      'BillingState',
+      'BillingPostalCode',
+      'BillingCountry',
       'EndDate',
       'EffectiveDate',
       'eHS_WDFA__c',
@@ -647,6 +695,16 @@ private class DeepCloneControllerTest {
       LIMIT 1
     ];
     return recordTypes.isEmpty() ? null : recordTypes[0].Id;
+  }
+
+  private static Date dateValue(Object value) {
+    if (value instanceof Date) {
+      return (Date) value;
+    }
+    if (value instanceof Datetime) {
+      return ((Datetime) value).date();
+    }
+    return null;
   }
 
   private static void putIfWriteable(

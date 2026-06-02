@@ -44,6 +44,30 @@ global with sharing class DeepCloneController implements Callable, Queueable {
 
   public class CloneRequest {
     @AuraEnabled
+    public Boolean facilityNameChanging { get; set; }
+    @AuraEnabled
+    public String newFacilityName { get; set; }
+    @AuraEnabled
+    public Boolean addressChanging { get; set; }
+    @AuraEnabled
+    public String newStreet { get; set; }
+    @AuraEnabled
+    public String newCity { get; set; }
+    @AuraEnabled
+    public String newState { get; set; }
+    @AuraEnabled
+    public String newPostalCode { get; set; }
+    @AuraEnabled
+    public String newCountry { get; set; }
+    @AuraEnabled
+    public Boolean startDateChanging { get; set; }
+    @AuraEnabled
+    public Date newStartDate { get; set; }
+    @AuraEnabled
+    public Boolean endDateChanging { get; set; }
+    @AuraEnabled
+    public Date newEndDate { get; set; }
+    @AuraEnabled
     public Boolean wdfaChanging { get; set; }
     @AuraEnabled
     public String newWdfa { get; set; }
@@ -72,6 +96,22 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     public String recordTypeDeveloperName { get; set; }
     @AuraEnabled
     public String recordTypeName { get; set; }
+    @AuraEnabled
+    public String facilityName { get; set; }
+    @AuraEnabled
+    public String street { get; set; }
+    @AuraEnabled
+    public String city { get; set; }
+    @AuraEnabled
+    public String state { get; set; }
+    @AuraEnabled
+    public String postalCode { get; set; }
+    @AuraEnabled
+    public String country { get; set; }
+    @AuraEnabled
+    public Date startDate { get; set; }
+    @AuraEnabled
+    public Date endDate { get; set; }
     @AuraEnabled
     public String wdfa { get; set; }
     @AuraEnabled
@@ -193,6 +233,13 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         'Id',
         'Name',
         'RecordTypeId',
+        'BillingStreet',
+        'BillingCity',
+        'BillingState',
+        'BillingPostalCode',
+        'BillingCountry',
+        'EffectiveDate',
+        'EndDate',
         'eHS_WDFA__c',
         'eHS_Facility_Id__c',
         'eHS_ACPNumber__c',
@@ -206,6 +253,14 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       CloneContext context = new CloneContext();
       context.accountId = recordId;
       context.accountName = getString(accountRecord, 'Name');
+      context.facilityName = context.accountName;
+      context.street = getString(accountRecord, 'BillingStreet');
+      context.city = getString(accountRecord, 'BillingCity');
+      context.state = getString(accountRecord, 'BillingState');
+      context.postalCode = getString(accountRecord, 'BillingPostalCode');
+      context.country = getString(accountRecord, 'BillingCountry');
+      context.startDate = getDate(accountRecord, 'EffectiveDate');
+      context.endDate = getDate(accountRecord, 'EndDate');
       context.wdfa = getString(accountRecord, 'eHS_WDFA__c');
       context.facilityId = getString(accountRecord, 'eHS_Facility_Id__c');
       context.acpNumber = getString(accountRecord, 'eHS_ACPNumber__c');
@@ -324,11 +379,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
 
       SObject newAccount = newSObject(ACCOUNT_OBJECT);
       copyCreateableFields(oldAccount, newAccount);
-      setCreateValue(newAccount, 'EndDate', null);
-      setCreateValue(newAccount, 'EffectiveDate', nowValue);
       setCreateValue(newAccount, 'IsActive', true);
       setCreateValue(newAccount, 'HealthCloudGA__Active__c', 'Yes');
-      applyRequestedIdentifierValues(oldAccount, newAccount, request);
+      applyRequestedFacilityValues(oldAccount, newAccount, request, nowValue);
       saveRecords(
         new List<SObject>{ newAccount },
         false,
@@ -550,6 +603,43 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   ) {
     Map<String, Object> values = callableRequestValues(input);
     CloneRequest request = new CloneRequest();
+    request.newFacilityName = readStringValue(
+      values,
+      new List<String>{ 'newFacilityName', 'facilityName', 'name', 'Name' }
+    );
+    request.newStreet = readStringValue(
+      values,
+      new List<String>{ 'newStreet', 'street', 'BillingStreet' }
+    );
+    request.newCity = readStringValue(
+      values,
+      new List<String>{ 'newCity', 'city', 'BillingCity' }
+    );
+    request.newState = readStringValue(
+      values,
+      new List<String>{ 'newState', 'state', 'province', 'BillingState' }
+    );
+    request.newPostalCode = readStringValue(
+      values,
+      new List<String>{
+        'newPostalCode',
+        'postalCode',
+        'zip',
+        'BillingPostalCode'
+      }
+    );
+    request.newCountry = readStringValue(
+      values,
+      new List<String>{ 'newCountry', 'country', 'BillingCountry' }
+    );
+    request.newStartDate = readDateValue(
+      values,
+      new List<String>{ 'newStartDate', 'startDate', 'EffectiveDate' }
+    );
+    request.newEndDate = readDateValue(
+      values,
+      new List<String>{ 'newEndDate', 'endDate', 'EndDate' }
+    );
     request.newWdfa = readStringValue(
       values,
       new List<String>{ 'newWdfa', 'wdfa', 'eHS_WDFA__c' }
@@ -577,6 +667,35 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       }
     );
 
+    Boolean explicitFacilityNameChanging = readBooleanValue(
+      values,
+      new List<String>{
+        'facilityNameChanging',
+        'isFacilityNameChanging',
+        'changeFacilityName',
+        'nameChanging'
+      }
+    );
+    Boolean explicitAddressChanging = readBooleanValue(
+      values,
+      new List<String>{ 'addressChanging', 'isAddressChanging', 'changeAddress' }
+    );
+    Boolean explicitStartDateChanging = readBooleanValue(
+      values,
+      new List<String>{
+        'startDateChanging',
+        'isStartDateChanging',
+        'changeStartDate'
+      }
+    );
+    Boolean explicitEndDateChanging = readBooleanValue(
+      values,
+      new List<String>{
+        'endDateChanging',
+        'isEndDateChanging',
+        'changeEndDate'
+      }
+    );
     Boolean explicitWdfaChanging = readBooleanValue(
       values,
       new List<String>{ 'wdfaChanging', 'isWdfaChanging', 'changeWdfa' }
@@ -603,9 +722,16 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     );
 
     SObject oldAccount = needsCallableComparison(
-        explicitWdfaChanging,
-        request.newWdfa
+        explicitFacilityNameChanging,
+        request.newFacilityName
       ) ||
+      needsCallableAddressComparison(explicitAddressChanging, request) ||
+      needsCallableDateComparison(
+        explicitStartDateChanging,
+        request.newStartDate
+      ) ||
+      needsCallableDateComparison(explicitEndDateChanging, request.newEndDate) ||
+      needsCallableComparison(explicitWdfaChanging, request.newWdfa) ||
       needsCallableComparison(
         explicitFacilityIdChanging,
         request.newFacilityId
@@ -620,6 +746,14 @@ global with sharing class DeepCloneController implements Callable, Queueable {
           recordId,
           new Set<String>{
             'Id',
+            'Name',
+            'BillingStreet',
+            'BillingCity',
+            'BillingState',
+            'BillingPostalCode',
+            'BillingCountry',
+            'EffectiveDate',
+            'EndDate',
             'eHS_WDFA__c',
             'eHS_Facility_Id__c',
             'eHS_ACPNumber__c',
@@ -628,6 +762,29 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         )
       : null;
 
+    request.facilityNameChanging = resolveCallableChangeFlag(
+      explicitFacilityNameChanging,
+      request.newFacilityName,
+      oldAccount,
+      'Name'
+    );
+    request.addressChanging = resolveCallableAddressChangeFlag(
+      explicitAddressChanging,
+      request,
+      oldAccount
+    );
+    request.startDateChanging = resolveCallableDateChangeFlag(
+      explicitStartDateChanging,
+      request.newStartDate,
+      oldAccount,
+      'EffectiveDate'
+    );
+    request.endDateChanging = resolveCallableDateChangeFlag(
+      explicitEndDateChanging,
+      request.newEndDate,
+      oldAccount,
+      'EndDate'
+    );
     request.wdfaChanging = resolveCallableChangeFlag(
       explicitWdfaChanging,
       request.newWdfa,
@@ -687,6 +844,26 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
+   * Purpose: Identifies when the IP sent any address component without an explicit address change flag.
+   */
+  private static Boolean needsCallableAddressComparison(
+    Boolean explicitChangeFlag,
+    CloneRequest request
+  ) {
+    return explicitChangeFlag == null && hasRequestedAddressValue(request);
+  }
+
+  /**
+   * Purpose: Identifies when the IP sent a date without an explicit date change flag.
+   */
+  private static Boolean needsCallableDateComparison(
+    Boolean explicitChangeFlag,
+    Date newValue
+  ) {
+    return explicitChangeFlag == null && newValue != null;
+  }
+
+  /**
    * Purpose: Resolves an IP change flag by honoring explicit flags first and otherwise comparing new payload values to the Account.
    */
   private static Boolean resolveCallableChangeFlag(
@@ -704,6 +881,50 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     }
     return normalizedNewValue !=
       trimToNull(getString(oldAccount, accountField));
+  }
+
+  /**
+   * Purpose: Resolves an IP address change flag by comparing address components when no explicit flag was sent.
+   */
+  private static Boolean resolveCallableAddressChangeFlag(
+    Boolean explicitChangeFlag,
+    CloneRequest request,
+    SObject oldAccount
+  ) {
+    if (explicitChangeFlag != null) {
+      return explicitChangeFlag;
+    }
+    if (!hasRequestedAddressValue(request)) {
+      return false;
+    }
+    return trimToNull(request.newStreet) !=
+      trimToNull(getString(oldAccount, 'BillingStreet')) ||
+      trimToNull(request.newCity) !=
+      trimToNull(getString(oldAccount, 'BillingCity')) ||
+      trimToNull(request.newState) !=
+      trimToNull(getString(oldAccount, 'BillingState')) ||
+      trimToNull(request.newPostalCode) !=
+      trimToNull(getString(oldAccount, 'BillingPostalCode')) ||
+      trimToNull(request.newCountry) !=
+      trimToNull(getString(oldAccount, 'BillingCountry'));
+  }
+
+  /**
+   * Purpose: Resolves an IP date change flag by comparing Date and DateTime Account fields as dates.
+   */
+  private static Boolean resolveCallableDateChangeFlag(
+    Boolean explicitChangeFlag,
+    Date newValue,
+    SObject oldAccount,
+    String accountField
+  ) {
+    if (explicitChangeFlag != null) {
+      return explicitChangeFlag;
+    }
+    if (newValue == null) {
+      return false;
+    }
+    return newValue != getDate(oldAccount, accountField);
   }
 
   /**
@@ -1026,6 +1247,43 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
+   * Purpose: Reads a date value from IP input, accepting Date, Datetime, or yyyy-mm-dd text.
+   */
+  private static Date readDateValue(
+    Map<String, Object> values,
+    List<String> keys
+  ) {
+    Object value = firstValue(values, keys);
+    if (value == null) {
+      return null;
+    }
+    if (value instanceof Date) {
+      return (Date) value;
+    }
+    if (value instanceof Datetime) {
+      return ((Datetime) value).date();
+    }
+
+    String textValue = trimToNull(String.valueOf(value));
+    if (textValue == null) {
+      return null;
+    }
+    if (textValue.length() > 10) {
+      textValue = textValue.substring(0, 10);
+    }
+    try {
+      return Date.valueOf(textValue);
+    } catch (Exception ex) {
+      throw new CloneException(
+        'Invalid date value for ' +
+          (keys == null || keys.isEmpty() ? 'field' : keys[0]) +
+          ': ' +
+          String.valueOf(value)
+      );
+    }
+  }
+
+  /**
    * Purpose: Reads a boolean value from IP input, accepting true/false, yes/no, y/n, and 1/0.
    */
   private static Boolean readBooleanValue(
@@ -1079,6 +1337,19 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     if (request == null) {
       throw new CloneException('Deep Clone request is required.');
     }
+    requireNewValue(
+      request.facilityNameChanging,
+      request.newFacilityName,
+      'Facility Name'
+    );
+    requireAddressValue(request);
+    requireNewDateValue(
+      request.startDateChanging,
+      request.newStartDate,
+      'Start Date'
+    );
+    requireNewDateValue(request.endDateChanging, request.newEndDate, 'End Date');
+    validateRequestedDateRange(request);
     requireNewValue(request.wdfaChanging, request.newWdfa, 'WDFA');
     requireNewValue(
       request.facilityIdChanging,
@@ -1105,6 +1376,63 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       throw new CloneException(
         label + ' is marked as changing. Enter the new value.'
       );
+    }
+  }
+
+  /**
+   * Purpose: Throws a clear error when address is marked as changing but no address component was entered.
+   */
+  private static void requireAddressValue(CloneRequest request) {
+    if (request != null && request.addressChanging == true && !hasRequestedAddressValue(request)) {
+      throw new CloneException(
+        'Address is marked as changing. Enter at least one address value.'
+      );
+    }
+  }
+
+  /**
+   * Purpose: Checks whether at least one replacement address component was provided.
+   */
+  private static Boolean hasRequestedAddressValue(CloneRequest request) {
+    return request != null &&
+      (!String.isBlank(request.newStreet) ||
+      !String.isBlank(request.newCity) ||
+      !String.isBlank(request.newState) ||
+      !String.isBlank(request.newPostalCode) ||
+      !String.isBlank(request.newCountry));
+  }
+
+  /**
+   * Purpose: Throws a clear error when a yes/no date field is marked as changing but the replacement date is blank.
+   */
+  private static void requireNewDateValue(
+    Boolean isChanging,
+    Date value,
+    String label
+  ) {
+    if (isChanging == true && value == null) {
+      throw new CloneException(
+        label + ' is marked as changing. Enter the new date.'
+      );
+    }
+  }
+
+  /**
+   * Purpose: Prevents the new Facility from starting after its requested end date.
+   */
+  private static void validateRequestedDateRange(CloneRequest request) {
+    Date effectiveStartDate = request.startDateChanging == true
+      ? request.newStartDate
+      : Date.today();
+    Date effectiveEndDate = request.endDateChanging == true
+      ? request.newEndDate
+      : null;
+    if (
+      effectiveStartDate != null &&
+      effectiveEndDate != null &&
+      effectiveEndDate < effectiveStartDate
+    ) {
+      throw new CloneException('End Date cannot be before Start Date.');
     }
   }
 
@@ -1512,13 +1840,66 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
-   * Purpose: Puts either the user-entered replacement values or the old carry-forward values onto the new Account.
+   * Purpose: Puts either the user-entered replacement values or the old/default values onto the new Account.
    */
-  private static void applyRequestedIdentifierValues(
+  private static void applyRequestedFacilityValues(
     SObject oldAccount,
     SObject newAccount,
-    CloneRequest request
+    CloneRequest request,
+    Datetime nowValue
   ) {
+    setCreateValue(
+      newAccount,
+      'Name',
+      request.facilityNameChanging == true
+        ? trimToNull(request.newFacilityName)
+        : getString(oldAccount, 'Name')
+    );
+    setCreateValue(
+      newAccount,
+      'BillingStreet',
+      request.addressChanging == true
+        ? trimToNull(request.newStreet)
+        : getString(oldAccount, 'BillingStreet')
+    );
+    setCreateValue(
+      newAccount,
+      'BillingCity',
+      request.addressChanging == true
+        ? trimToNull(request.newCity)
+        : getString(oldAccount, 'BillingCity')
+    );
+    setCreateValue(
+      newAccount,
+      'BillingState',
+      request.addressChanging == true
+        ? trimToNull(request.newState)
+        : getString(oldAccount, 'BillingState')
+    );
+    setCreateValue(
+      newAccount,
+      'BillingPostalCode',
+      request.addressChanging == true
+        ? trimToNull(request.newPostalCode)
+        : getString(oldAccount, 'BillingPostalCode')
+    );
+    setCreateValue(
+      newAccount,
+      'BillingCountry',
+      request.addressChanging == true
+        ? trimToNull(request.newCountry)
+        : getString(oldAccount, 'BillingCountry')
+    );
+    setCreateDateValue(
+      newAccount,
+      'EffectiveDate',
+      request.startDateChanging == true ? request.newStartDate : nowValue.date()
+    );
+    setCreateDateValue(
+      newAccount,
+      'EndDate',
+      request.endDateChanging == true ? request.newEndDate : null
+    );
     setCreateValue(
       newAccount,
       'eHS_WDFA__c',
@@ -2546,7 +2927,15 @@ global with sharing class DeepCloneController implements Callable, Queueable {
    */
   private static Boolean isRequiredCloneReadField(String fieldName) {
     String lowerFieldName = fieldName == null ? '' : fieldName.toLowerCase();
-    return lowerFieldName == 'ehs_wdfa__c' ||
+    return lowerFieldName == 'name' ||
+      lowerFieldName == 'billingstreet' ||
+      lowerFieldName == 'billingcity' ||
+      lowerFieldName == 'billingstate' ||
+      lowerFieldName == 'billingpostalcode' ||
+      lowerFieldName == 'billingcountry' ||
+      lowerFieldName == 'effectivedate' ||
+      lowerFieldName == 'enddate' ||
+      lowerFieldName == 'ehs_wdfa__c' ||
       lowerFieldName == 'ehs_facility_id__c' ||
       lowerFieldName == 'ehs_acpnumber__c' ||
       lowerFieldName == 'ehs_source_system_id__c' ||
@@ -2576,6 +2965,17 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Object value
   ) {
     setFieldValue(row, fieldName, value, true);
+  }
+
+  /**
+   * Purpose: Sets a Date or DateTime field from a user-selected date.
+   */
+  private static void setCreateDateValue(
+    SObject row,
+    String fieldName,
+    Date value
+  ) {
+    setCreateValue(row, fieldName, dateValueForField(row, fieldName, value));
   }
 
   /**
@@ -2620,6 +3020,29 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       return;
     }
     row.put(fieldName, value);
+  }
+
+  /**
+   * Purpose: Converts a Date to the target field type before dynamic assignment.
+   */
+  private static Object dateValueForField(
+    SObject row,
+    String fieldName,
+    Date value
+  ) {
+    if (value == null) {
+      return null;
+    }
+
+    String objectName = row.getSObjectType().getDescribe().getName();
+    Schema.DescribeFieldResult fieldDescribe = getFieldDescribe(
+      objectName,
+      fieldName
+    );
+    if (fieldDescribe != null && String.valueOf(fieldDescribe.getType()) == 'DATETIME') {
+      return Datetime.newInstance(value, Time.newInstance(0, 0, 0, 0));
+    }
+    return value;
   }
 
   /**

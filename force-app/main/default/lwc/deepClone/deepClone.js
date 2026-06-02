@@ -15,33 +15,87 @@ const STEP_LABELS = [
   "Assets"
 ];
 
-const IDENTIFIER_FIELDS = [
-  ["WDFA", "wdfa"],
-  ["Facility ID", "facilityId"],
-  ["ACP Number", "acpNumber"],
-  ["DSR ID", "dsrId"]
+const SUMMARY_FIELDS = [
+  { label: "Facility Name", field: "facilityName" },
+  { label: "Address", field: "address", kind: "address" },
+  { label: "Start Date", field: "startDate" },
+  { label: "End Date", field: "endDate" },
+  { label: "WDFA", field: "wdfa" },
+  { label: "Facility ID", field: "facilityId" },
+  { label: "ACP Number", field: "acpNumber" },
+  { label: "DSR ID", field: "dsrId" }
 ];
 
 const QUESTION_FIELDS = [
-  ["WDFA changing?", "New WDFA", "wdfaChanging", "newWdfa", "wdfa"],
-  [
-    "Facility ID changing?",
-    "New Facility ID",
-    "facilityIdChanging",
-    "newFacilityId",
-    "facilityId"
-  ],
-  [
-    "ACP Number changing?",
-    "New ACP Number",
-    "acpNumberChanging",
-    "newAcpNumber",
-    "acpNumber"
-  ],
-  ["DSR ID changing?", "New DSR ID", "dsrIdChanging", "newDsrId", "dsrId"]
+  {
+    toggleLabel: "Facility Name changing?",
+    inputLabel: "New Facility Name",
+    toggleField: "facilityNameChanging",
+    valueField: "newFacilityName",
+    contextField: "facilityName",
+    kind: "text"
+  },
+  {
+    toggleLabel: "Address changing?",
+    inputLabel: "New Facility Address",
+    toggleField: "addressChanging",
+    contextField: "address",
+    kind: "address"
+  },
+  {
+    toggleLabel: "Start Date changing?",
+    inputLabel: "New Start Date",
+    toggleField: "startDateChanging",
+    valueField: "newStartDate",
+    contextField: "startDate",
+    kind: "date"
+  },
+  {
+    toggleLabel: "End Date changing?",
+    inputLabel: "New End Date",
+    toggleField: "endDateChanging",
+    valueField: "newEndDate",
+    contextField: "endDate",
+    kind: "date"
+  },
+  {
+    toggleLabel: "WDFA changing?",
+    inputLabel: "New WDFA",
+    toggleField: "wdfaChanging",
+    valueField: "newWdfa",
+    contextField: "wdfa",
+    kind: "text"
+  },
+  {
+    toggleLabel: "Facility ID changing?",
+    inputLabel: "New Facility ID",
+    toggleField: "facilityIdChanging",
+    valueField: "newFacilityId",
+    contextField: "facilityId",
+    kind: "text"
+  },
+  {
+    toggleLabel: "ACP Number changing?",
+    inputLabel: "New ACP Number",
+    toggleField: "acpNumberChanging",
+    valueField: "newAcpNumber",
+    contextField: "acpNumber",
+    kind: "text"
+  },
+  {
+    toggleLabel: "DSR ID changing?",
+    inputLabel: "New DSR ID",
+    toggleField: "dsrIdChanging",
+    valueField: "newDsrId",
+    contextField: "dsrId",
+    kind: "text"
+  }
 ];
 
 const REQUIRED_VALUE_CHECKS = [
+  ["facilityNameChanging", "newFacilityName", "New Facility Name is required."],
+  ["startDateChanging", "newStartDate", "New Start Date is required."],
+  ["endDateChanging", "newEndDate", "New End Date is required."],
   ["wdfaChanging", "newWdfa", "New WDFA is required."],
   ["facilityIdChanging", "newFacilityId", "New Facility ID is required."],
   ["acpNumberChanging", "newAcpNumber", "New ACP Number is required."],
@@ -52,6 +106,18 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   _recordId;
 
   @track form = {
+    facilityNameChanging: false,
+    newFacilityName: "",
+    addressChanging: false,
+    newStreet: "",
+    newCity: "",
+    newState: "",
+    newPostalCode: "",
+    newCountry: "",
+    startDateChanging: false,
+    newStartDate: "",
+    endDateChanging: false,
+    newEndDate: "",
     wdfaChanging: false,
     newWdfa: "",
     facilityIdChanging: false,
@@ -127,32 +193,44 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Builds the four current identifier values displayed at the top of the modal.
+   * Purpose: Builds the current Facility values displayed at the top of the modal.
    */
-  get identifierValues() {
-    return IDENTIFIER_FIELDS.map(([label, field]) => ({
+  get summaryValues() {
+    return SUMMARY_FIELDS.map(({ label, field, kind }) => ({
       label,
-      value: this.displayValue(this.context?.[field])
+      value:
+        kind === "address"
+          ? this.displayAddress(this.context)
+          : this.displayValue(this.context?.[field])
     }));
   }
 
   /**
-   * Purpose: Builds the WDFA, Facility ID, ACP Number, and DSR ID question rows used by the template.
+   * Purpose: Builds the clone-time change question rows used by the template.
    */
   get questionRows() {
-    return QUESTION_FIELDS.map(
-      ([toggleLabel, inputLabel, toggleField, valueField, contextField]) => ({
-        toggleLabel,
-        inputLabel,
-        toggleField,
-        valueField,
-        checked: this.form[toggleField],
-        showInput: this.form[toggleField],
-        showCarryForward: !this.form[toggleField],
-        value: this.form[valueField],
-        currentValue: this.displayValue(this.context?.[contextField])
-      })
-    );
+    return QUESTION_FIELDS.map((fieldConfig) => {
+      const isAddress = fieldConfig.kind === "address";
+      const isDate = fieldConfig.kind === "date";
+      return {
+        ...fieldConfig,
+        checked: this.form[fieldConfig.toggleField],
+        showInput: this.form[fieldConfig.toggleField],
+        showCarryForward: !this.form[fieldConfig.toggleField],
+        value: fieldConfig.valueField ? this.form[fieldConfig.valueField] : "",
+        currentValue: isAddress
+          ? this.displayAddress(this.context)
+          : this.displayValue(this.context?.[fieldConfig.contextField]),
+        isAddress,
+        isDate,
+        isText: fieldConfig.kind === "text",
+        street: this.form.newStreet,
+        city: this.form.newCity,
+        province: this.form.newState,
+        postalCode: this.form.newPostalCode,
+        country: this.form.newCountry
+      };
+    });
   }
 
   /**
@@ -196,15 +274,10 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Checks whether the user selected at least one identifier change before allowing Deep Clone to start.
+   * Purpose: Checks whether the user selected at least one change before allowing Deep Clone to start.
    */
   get hasSelectedChange() {
-    return (
-      this.form.wdfaChanging ||
-      this.form.facilityIdChanging ||
-      this.form.acpNumberChanging ||
-      this.form.dsrIdChanging
-    );
+    return QUESTION_FIELDS.some(({ toggleField }) => this.form[toggleField]);
   }
 
   /**
@@ -260,7 +333,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Calls Apex to load Facility context and current identifier values for the selected Account.
+   * Purpose: Calls Apex to load Facility context and current values for the selected Account.
    */
   async loadContext() {
     this.isLoading = true;
@@ -314,7 +387,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Updates the form when a user turns one of the yes/no identifier change toggles on or off.
+   * Purpose: Updates the form when a user turns one of the yes/no change toggles on or off.
    */
   handleToggle(event) {
     const field = event.target.dataset.field;
@@ -325,13 +398,27 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Stores the new WDFA, Facility ID, ACP Number, or DSR ID entered by the user.
+   * Purpose: Stores text and date replacement values entered by the user.
    */
   handleInput(event) {
     const field = event.target.dataset.field;
     this.form = {
       ...this.form,
       [field]: event.target.value
+    };
+  }
+
+  /**
+   * Purpose: Stores the composite address parts entered through lightning-input-address.
+   */
+  handleAddressInput(event) {
+    this.form = {
+      ...this.form,
+      newStreet: event.target.street || "",
+      newCity: event.target.city || "",
+      newState: event.target.province || "",
+      newPostalCode: event.target.postalCode || "",
+      newCountry: event.target.country || ""
     };
   }
 
@@ -396,6 +483,24 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
         this.cloneError = message;
         return false;
       }
+    }
+
+    if (this.form.addressChanging && !this.hasAddressInput()) {
+      this.cloneError = "Enter at least one new address value.";
+      return false;
+    }
+
+    const startDate = this.form.startDateChanging
+      ? this.form.newStartDate
+      : this.todayIso();
+    if (
+      this.form.endDateChanging &&
+      this.form.newEndDate &&
+      startDate &&
+      this.form.newEndDate < startDate
+    ) {
+      this.cloneError = "New End Date cannot be before New Start Date.";
+      return false;
     }
     return true;
   }
@@ -482,9 +587,48 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   }
 
   /**
-   * Purpose: Displays blank identifier values as Not set so the UI never looks empty.
+   * Purpose: Checks whether the new address contains any user-entered component.
+   */
+  hasAddressInput() {
+    return [
+      this.form.newStreet,
+      this.form.newCity,
+      this.form.newState,
+      this.form.newPostalCode,
+      this.form.newCountry
+    ].some((value) => `${value || ""}`.trim());
+  }
+
+  /**
+   * Purpose: Displays blank values as Not set so the UI never looks empty.
    */
   displayValue(value) {
     return `${value || ""}`.trim() || "Not set";
+  }
+
+  /**
+   * Purpose: Displays Account address components as a compact multi-line address.
+   */
+  displayAddress(source) {
+    if (!source) {
+      return "Not set";
+    }
+    const cityState = [source.city, source.state]
+      .filter((value) => `${value || ""}`.trim())
+      .join(", ");
+    const cityLine = [cityState, source.postalCode]
+      .filter((value) => `${value || ""}`.trim())
+      .join(" ");
+    const lines = [source.street, cityLine, source.country].filter((value) =>
+      `${value || ""}`.trim()
+    );
+    return lines.join("\n") || "Not set";
+  }
+
+  /**
+   * Purpose: Returns today's date in yyyy-mm-dd format for client-side date comparisons.
+   */
+  todayIso() {
+    return new Date().toISOString().slice(0, 10);
   }
 }

@@ -57,26 +57,26 @@
           </lightning-layout>
         </section>
 
-        <!-- Shows current WDFA, Facility ID, ACP Number, and DSR ID values. -->
+        <!-- Shows current Facility values. -->
         <section class="identifier-panel slds-box slds-theme_default">
           <lightning-layout multiple-rows>
-            <template for:each={identifierValues} for:item="identifier">
+            <template for:each={summaryValues} for:item="summary">
               <lightning-layout-item
-                key={identifier.label}
+                key={summary.label}
                 size="12"
                 small-device-size="6"
                 medium-device-size="3"
                 padding="horizontal-small"
                 class="identifier-item"
               >
-                <p class="field-label">{identifier.label}</p>
-                <p class="field-value">{identifier.value}</p>
+                <p class="field-label">{summary.label}</p>
+                <p class="field-value">{summary.value}</p>
               </lightning-layout-item>
             </template>
           </lightning-layout>
         </section>
 
-        <!-- Contains the four change questions for WDFA, Facility ID, ACP, and DSR ID. -->
+        <!-- Contains the change questions for Facility details and identifiers. -->
         <section class="questions">
           <template for:each={questionRows} for:item="row">
             <div class="question-row" key={row.toggleField}>
@@ -105,15 +105,46 @@
                   class="question-input"
                 >
                   <template lwc:if={row.showInput}>
-                    <lightning-input
-                      type="text"
-                      label={row.inputLabel}
-                      data-field={row.valueField}
-                      value={row.value}
-                      onchange={handleInput}
-                      disabled={isCloning}
-                      required
-                    ></lightning-input>
+                    <template lwc:if={row.isAddress}>
+                      <lightning-input-address
+                        address-label={row.inputLabel}
+                        street-label="Street"
+                        city-label="City"
+                        province-label="State"
+                        postal-code-label="Postal Code"
+                        country-label="Country"
+                        street={row.street}
+                        city={row.city}
+                        province={row.province}
+                        postal-code={row.postalCode}
+                        country={row.country}
+                        onchange={handleAddressInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input-address>
+                    </template>
+                    <template lwc:if={row.isDate}>
+                      <lightning-input
+                        type="date"
+                        label={row.inputLabel}
+                        data-field={row.valueField}
+                        value={row.value}
+                        onchange={handleInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input>
+                    </template>
+                    <template lwc:if={row.isText}>
+                      <lightning-input
+                        type="text"
+                        label={row.inputLabel}
+                        data-field={row.valueField}
+                        value={row.value}
+                        onchange={handleInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input>
+                    </template>
                   </template>
                   <template lwc:if={row.showCarryForward}>
                     <div class="carry-forward slds-box slds-theme_shade">

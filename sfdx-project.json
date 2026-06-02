@@ -2,11 +2,19 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "package": "Deep Clone",
+      "versionName": "Deep Clone 1.0",
+      "versionNumber": "1.0.0.NEXT",
+      "versionDescription": "Adds Facility name, address, start date, and end date replacement values to Deep Clone."
     }
   ],
   "name": "deep-clone",
   "namespace": "",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "66.0"
+  "sourceApiVersion": "66.0",
+  "packageAliases": {
+    "Deep Clone": "0Hog70000000TurCAE",
+    "Deep Clone@1.0.0-14": "04tg7000000B3sDAAS"
+  }
 }
