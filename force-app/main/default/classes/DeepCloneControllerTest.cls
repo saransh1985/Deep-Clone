@@ -130,9 +130,9 @@ private class DeepCloneControllerTest {
     }
     if (hasField('Account', 'EndDate')) {
       System.assertEquals(
-        Date.today(),
+        requestedEndDate,
         dateValue(oldFacility.get('EndDate')),
-        'The old Facility should be ended during Deep Clone.'
+        'The old Facility should keep the user-entered End Date.'
       );
       System.assertEquals(
         null,
@@ -179,7 +179,7 @@ private class DeepCloneControllerTest {
 
       if (hasField('Asset', 'UsageEndDate')) {
         for (SObject oldAsset : oldAssets) {
-          System.assertEquals(Date.today(), oldAsset.get('UsageEndDate'));
+          System.assertEquals(requestedEndDate, oldAsset.get('UsageEndDate'));
         }
         for (SObject newAsset : newAssets) {
           System.assertEquals(null, newAsset.get('UsageEndDate'));

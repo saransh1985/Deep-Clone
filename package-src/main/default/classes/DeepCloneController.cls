@@ -323,6 +323,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
 
       Datetime nowValue = Datetime.now();
       Date today = Date.today();
+      Date closeDate = request.endDateChanging == true
+        ? request.newEndDate
+        : today;
       CloneResult result = new CloneResult();
       result.steps = new List<CloneStep>();
 
@@ -363,7 +366,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
 
       SObject oldAccountUpdate = newSObject(ACCOUNT_OBJECT);
       oldAccountUpdate.put('Id', recordId);
-      setUpdateValue(oldAccountUpdate, 'EndDate', nowValue);
+      setUpdateDateValue(oldAccountUpdate, 'EndDate', closeDate);
       setUpdateValue(oldAccountUpdate, 'eHS_Status__c', 'Closed');
       setUpdateValue(oldAccountUpdate, 'IsActive', false);
       setUpdateValue(oldAccountUpdate, 'HealthCloudGA__Active__c', 'No');
@@ -413,6 +416,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         buildCareProgramTeamMemberConfig(),
         recordId,
         newAccountId,
+        closeDate,
         today,
         nowValue,
         newFacilityName,
@@ -426,6 +430,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         buildHealthcarePractitionerFacilityConfig(),
         recordId,
         newAccountId,
+        closeDate,
         today,
         nowValue,
         newFacilityName,
@@ -442,6 +447,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         buildBusinessLicenseConfig(),
         recordId,
         newAccountId,
+        closeDate,
         today,
         nowValue,
         newFacilityName,
@@ -455,6 +461,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         buildAssetConfig(),
         recordId,
         newAccountId,
+        closeDate,
         today,
         nowValue,
         newFacilityName,
@@ -647,6 +654,10 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       values,
       new List<String>{ 'newStartDate', 'startDate', 'EffectiveDate' }
     );
+    request.newEndDate = readDateValue(
+      values,
+      new List<String>{ 'newEndDate', 'endDate', 'EndDate' }
+    );
     request.newWdfa = readStringValue(
       values,
       new List<String>{ 'newWdfa', 'wdfa', 'eHS_WDFA__c' }
@@ -695,6 +706,14 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         'changeStartDate'
       }
     );
+    Boolean explicitEndDateChanging = readBooleanValue(
+      values,
+      new List<String>{
+        'endDateChanging',
+        'isEndDateChanging',
+        'changeEndDate'
+      }
+    );
     Boolean explicitWdfaChanging = readBooleanValue(
       values,
       new List<String>{ 'wdfaChanging', 'isWdfaChanging', 'changeWdfa' }
@@ -729,6 +748,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         explicitStartDateChanging,
         request.newStartDate
       ) ||
+      needsCallableDateComparison(explicitEndDateChanging, request.newEndDate) ||
       needsCallableComparison(explicitWdfaChanging, request.newWdfa) ||
       needsCallableComparison(
         explicitFacilityIdChanging,
@@ -751,6 +771,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
             'BillingPostalCode',
             'BillingCountry',
             'EffectiveDate',
+            'EndDate',
             'eHS_WDFA__c',
             'eHS_Facility_Id__c',
             'eHS_ACPNumber__c',
@@ -775,6 +796,12 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       request.newStartDate,
       oldAccount,
       'EffectiveDate'
+    );
+    request.endDateChanging = resolveCallableDateChangeFlag(
+      explicitEndDateChanging,
+      request.newEndDate,
+      oldAccount,
+      'EndDate'
     );
     request.wdfaChanging = resolveCallableChangeFlag(
       explicitWdfaChanging,
@@ -1339,6 +1366,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       request.newStartDate,
       'Start Date'
     );
+    requireNewDateValue(request.endDateChanging, request.newEndDate, 'End Date');
     requireNewValue(request.wdfaChanging, request.newWdfa, 'WDFA');
     requireNewValue(
       request.facilityIdChanging,
@@ -1967,7 +1995,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     ChildCloneConfig config,
     Id oldAccountId,
     Id newAccountId,
-    Date today,
+    Date oldEndDate,
+    Date newStartDate,
     Datetime nowValue,
     String newFacilityName,
     Boolean renameChildRecords
@@ -1996,13 +2025,18 @@ global with sharing class DeepCloneController implements Callable, Queueable {
 
     for (SObject oldRow : oldRows) {
       String sourceSystemId = getString(oldRow, 'eHS_Source_System_Id__c');
-      SObject oldUpdate = buildOldChildUpdate(config, oldRow, today, nowValue);
+      SObject oldUpdate = buildOldChildUpdate(
+        config,
+        oldRow,
+        oldEndDate,
+        nowValue
+      );
       updates.add(oldUpdate);
 
       SObject clone = newSObject(config.objectName);
       copyCreateableFields(oldRow, clone);
       setCreateValue(clone, config.accountField, newAccountId);
-      applyNewChildValues(config, clone, today, nowValue);
+      applyNewChildValues(config, clone, newStartDate, nowValue);
       applyFacilityNameDrivenChildName(
         config,
         oldRow,
@@ -2142,7 +2176,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     ChildCloneConfig config,
     Id oldAccountId,
     Id newAccountId,
-    Date today,
+    Date oldEndDate,
+    Date newStartDate,
     Datetime nowValue,
     String newFacilityName,
     Boolean renameChildRecords
@@ -2161,7 +2196,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Set<Id> oldAssetIds = new Set<Id>();
     for (SObject asset : oldAssets) {
       oldAssetIds.add((Id) asset.get('Id'));
-      updates.add(buildOldChildUpdate(config, asset, today, nowValue));
+      updates.add(buildOldChildUpdate(config, asset, oldEndDate, nowValue));
       addSourceSystemFeed(
         feedItems,
         asset,
@@ -2202,7 +2237,7 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         SObject clone = newSObject(config.objectName);
         copyCreateableFields(source, clone);
         setCreateValue(clone, config.accountField, newAccountId);
-        applyNewChildValues(config, clone, today, nowValue);
+        applyNewChildValues(config, clone, newStartDate, nowValue);
         if (renameChildRecords == true) {
           setCreateValue(
             clone,
@@ -2552,9 +2587,10 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       return;
     }
 
-    Object value = String.valueOf(fieldDescribe.getType()) == 'DATETIME'
+    Boolean isDateTime = String.valueOf(fieldDescribe.getType()) == 'DATETIME';
+    Object value = today == null && isDateTime
       ? (Object) nowValue
-      : (Object) today;
+      : dateValueForField(row, fieldName, today);
     if (createMode) {
       setCreateValue(row, fieldName, value);
     } else {
@@ -3194,6 +3230,17 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Date value
   ) {
     setCreateValue(row, fieldName, dateValueForField(row, fieldName, value));
+  }
+
+  /**
+   * Purpose: Updates a Date or DateTime field from a user-selected date.
+   */
+  private static void setUpdateDateValue(
+    SObject row,
+    String fieldName,
+    Date value
+  ) {
+    setUpdateValue(row, fieldName, dateValueForField(row, fieldName, value));
   }
 
   /**

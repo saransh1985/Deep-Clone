@@ -51,6 +51,14 @@ const QUESTION_FIELDS = [
     kind: "date"
   },
   {
+    toggleLabel: "End Date changing?",
+    inputLabel: "Old Facility End Date",
+    toggleField: "endDateChanging",
+    valueField: "newEndDate",
+    contextField: "endDate",
+    kind: "date"
+  },
+  {
     toggleLabel: "WDFA changing?",
     inputLabel: "New WDFA",
     toggleField: "wdfaChanging",
@@ -98,7 +106,10 @@ const ADDRESS_VALIDITY_FIELDS = [
   "postalCode",
   "country"
 ];
-const DATE_REQUEST_FIELDS = [["newStartDate", "startDateChanging"]];
+const DATE_REQUEST_FIELDS = [
+  ["newStartDate", "startDateChanging"],
+  ["newEndDate", "endDateChanging"]
+];
 
 export default class DeepClone extends NavigationMixin(LightningElement) {
   _recordId;
@@ -114,6 +125,8 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     newCountry: "",
     startDateChanging: false,
     newStartDate: "",
+    endDateChanging: false,
+    newEndDate: "",
     wdfaChanging: false,
     newWdfa: "",
     facilityIdChanging: false,
