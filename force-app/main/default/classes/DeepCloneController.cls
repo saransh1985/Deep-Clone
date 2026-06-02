@@ -1435,13 +1435,11 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Date effectiveStartDate = request.startDateChanging == true
       ? request.newStartDate
       : Date.today();
-    Date effectiveEndDate = request.endDateChanging == true
-      ? request.newEndDate
-      : null;
     if (
       effectiveStartDate != null &&
-      effectiveEndDate != null &&
-      effectiveEndDate < effectiveStartDate
+      request.endDateChanging == true &&
+      request.newEndDate != null &&
+      request.newEndDate < effectiveStartDate
     ) {
       throw new CloneException('End Date cannot be before Start Date.');
     }
@@ -2459,9 +2457,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
    */
   @TestVisible
   private static String buildAssetName(String newFacilityName) {
-    return limitLength(
-      joinNameParts(new List<String>{ ASSET_NAME_PREFIX, newFacilityName }),
-      255
+    return buildLimitedName(
+      new List<String>{ ASSET_NAME_PREFIX, newFacilityName }
     );
   }
 
@@ -2474,11 +2471,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     String roleLabel,
     String newFacilityName
   ) {
-    return limitLength(
-      joinNameParts(
-        new List<String>{ practitionerName, roleLabel, newFacilityName }
-      ),
-      255
+    return buildLimitedName(
+      new List<String>{ practitionerName, roleLabel, newFacilityName }
     );
   }
 
@@ -2490,10 +2484,11 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     String newFacilityName,
     String roleLabel
   ) {
-    return limitLength(
-      joinNameParts(new List<String>{ newFacilityName, roleLabel }),
-      255
-    );
+    return buildLimitedName(new List<String>{ newFacilityName, roleLabel });
+  }
+
+  private static String buildLimitedName(List<String> parts) {
+    return limitLength(joinNameParts(parts), 255);
   }
 
   /**

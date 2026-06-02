@@ -1,9 +1,6 @@
 <template>
-  <!-- Uses Salesforce's standard quick action modal structure for a native Lightning look. -->
   <lightning-quick-action-panel header="Deep Clone">
-    <!-- Keeps the modal body compact so content starts close to the standard header. -->
     <div class="panel-body">
-      <!-- Shows a loading state while the component reads the Account details. -->
       <template lwc:if={isLoading}>
         <div class="state state_center">
           <lightning-spinner
@@ -13,7 +10,6 @@
         </div>
       </template>
 
-      <!-- Shows an error state if the Account context could not be loaded. -->
       <template lwc:if={showLoadError}>
         <div class="state">
           <div
@@ -26,7 +22,6 @@
         </div>
       </template>
 
-      <!-- Shows a blocked state when the Account is not record type Facility. -->
       <template lwc:if={showBlocked}>
         <div class="state">
           <div
@@ -40,7 +35,6 @@
         </div>
       </template>
 
-      <!-- Shows the main Deep Clone form after loading succeeds. -->
       <template lwc:if={showForm}>
         <section class="account-summary">
           <lightning-layout vertical-align="center">
@@ -57,7 +51,6 @@
           </lightning-layout>
         </section>
 
-        <!-- Shows transaction-level errors near the modal header. -->
         <template lwc:if={cloneError}>
           <div
             class="slds-notify slds-notify_alert slds-alert_error clone-alert"
@@ -68,7 +61,6 @@
           </div>
         </template>
 
-        <!-- Shows current Facility values. -->
         <section class="identifier-panel slds-box slds-theme_default">
           <lightning-layout multiple-rows>
             <template for:each={summaryValues} for:item="summary">
@@ -87,7 +79,6 @@
           </lightning-layout>
         </section>
 
-        <!-- Contains the change questions for Facility details and identifiers. -->
         <section class="questions">
           <template for:each={questionRows} for:item="row">
             <div class="question-row" key={row.toggleField}>
@@ -133,30 +124,17 @@
                         disabled={isCloning}
                       ></lightning-input-address>
                     </template>
-                    <template lwc:if={row.isDate}>
+                    <template lwc:if={row.isScalar}>
                       <lightning-input
-                        type="date"
+                        type={row.inputType}
                         label={row.inputLabel}
                         data-field={row.valueField}
                         value={row.value}
                         onchange={handleInput}
                         disabled={isCloning}
+                        message-when-value-missing={row.requiredMessage}
                         required
                       ></lightning-input>
-                    </template>
-                    <template lwc:if={row.isText}>
-                      <lightning-input
-                        type="text"
-                        label={row.inputLabel}
-                        data-field={row.valueField}
-                        value={row.value}
-                        onchange={handleInput}
-                        disabled={isCloning}
-                        required
-                      ></lightning-input>
-                    </template>
-                    <template lwc:if={row.errorMessage}>
-                      <p class="field-error">{row.errorMessage}</p>
                     </template>
                   </template>
                   <template lwc:if={row.showCarryForward}>
@@ -172,7 +150,6 @@
         </section>
       </template>
 
-      <!-- Shows the blocking progress modal while Apex is cloning records. -->
       <template lwc:if={isCloning}>
         <section
           class="progress-modal"
@@ -227,8 +204,10 @@
       </template>
     </div>
 
-    <!-- Uses the standard quick action footer slot so there is proper space below the buttons. -->
-    <div slot="footer" class="footer-actions">
+    <div
+      slot="footer"
+      class="slds-grid slds-grid_align-end slds-gutters_x-small"
+    >
       <lightning-button
         data-id="cancel"
         label="Cancel"

@@ -96,13 +96,6 @@ h3 {
   margin: 0 0 0.35rem;
 }
 
-.field-error {
-  color: #ba0517;
-  font-size: 0.72rem;
-  line-height: 1.2;
-  margin: 0.15rem 0 0;
-}
-
 .state {
   padding: 0.35rem 0 0.55rem;
 }
@@ -195,14 +188,6 @@ h3 {
 
 .step-status lightning-spinner {
   --spinner-size: 1rem;
-}
-
-.footer-actions {
-  align-items: center;
-  display: flex;
-  gap: 0.4rem;
-  justify-content: flex-end;
-  padding: 0.1rem 0 0.2rem;
 }
 
 @media (max-width: 42rem) {
