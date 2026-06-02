@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_PIA_ANP__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <defaultValue>false</defaultValue>
+    <deprecated>false</deprecated>
+    <description>Used to indicate if this item is included in a PIA file</description>
+    <externalId>false</externalId>
+    <label>ANP - Alberta Netcare</label>
+    <securityClassification>MissionCritical</securityClassification>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

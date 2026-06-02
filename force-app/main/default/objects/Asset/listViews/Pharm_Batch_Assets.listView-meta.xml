@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pharm_Batch_Assets</fullName>
+    <columns>ASSET.NAME</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>PRODUCT2.NAME</columns>
+    <columns>CONTACT.NAME</columns>
+    <columns>eHS_Production_Live_Date__c</columns>
+    <columns>eHS_Production_Enabled_Date__c</columns>
+    <columns>ASSET.USAGE_END_DATE</columns>
+    <columns>ASSET.CREATED_DATE</columns>
+    <columns>eHS_Source_System__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>eHS_Asset_Type__c</field>
+        <operation>equals</operation>
+        <value>eHS Provider Initiative</value>
+    </filters>
+    <filters>
+        <field>PRODUCT2.NAME</field>
+        <operation>equals</operation>
+        <value>Pharmacy Batch</value>
+    </filters>
+    <label>Pharmacy Batch Assets</label>
+</ListView>

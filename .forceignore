@@ -1,0 +1,6 @@
+.sf
+.sfdx
+.git
+.gitignore
+docs/**
+README.md

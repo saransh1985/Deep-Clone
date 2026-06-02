@@ -1,0 +1,100 @@
+﻿{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/Account"
+        },
+        "QualifiedApiName": "Account",
+        "Label": "Account",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/AccountContactRelation"
+        },
+        "QualifiedApiName": "AccountContactRelation",
+        "Label": "Account Contact Relationship",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/Asset"
+        },
+        "QualifiedApiName": "Asset",
+        "Label": "Asset",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/BusinessLicense"
+        },
+        "QualifiedApiName": "BusinessLicense",
+        "Label": "Business License",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/CareProgramTeamMember"
+        },
+        "QualifiedApiName": "CareProgramTeamMember",
+        "Label": "Care Program Team Member",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/01Iau000000g3G1"
+        },
+        "QualifiedApiName": "HealthCloudGA__AccountAccountRelation__c",
+        "Label": "Account-Account Relationship",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/01Iau000000g3HS"
+        },
+        "QualifiedApiName": "HealthCloudGA__ReciprocalRole__c",
+        "Label": "Reciprocal Role",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/HealthcareFacility"
+        },
+        "QualifiedApiName": "HealthcareFacility",
+        "Label": "Healthcare Facility",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      },
+      {
+        "attributes": {
+          "type": "EntityDefinition",
+          "url": "/services/data/v66.0/sobjects/EntityDefinition/Identifier"
+        },
+        "QualifiedApiName": "Identifier",
+        "Label": "Identifier",
+        "IsCustomizable": true,
+        "IsCustomSetting": false
+      }
+    ],
+    "totalSize": 9,
+    "done": true
+  },
+  "warnings": []
+}

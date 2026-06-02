@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_OtherPhoneExt_Validation</fullName>
+    <active>true</active>
+    <errorConditionFormula>AND(
+NOT(ISBLANK(eHS_OtherPhoneExt__pc)),
+NOT(REGEX(eHS_OtherPhoneExt__pc, &quot;^[0-9]{1,6}$&quot;))
+)</errorConditionFormula>
+    <errorDisplayField>eHS_OtherPhoneExt__pc</errorDisplayField>
+    <errorMessage>Phone number extensions must be numeric and a maximum of 6 digits only</errorMessage>
+</ValidationRule>

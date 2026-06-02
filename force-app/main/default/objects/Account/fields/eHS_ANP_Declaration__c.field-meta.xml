@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_ANP_Declaration__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <defaultValue>false</defaultValue>
+    <deprecated>false</deprecated>
+    <description>Confirms the user has completed the Alberta Netcare access declaration</description>
+    <externalId>false</externalId>
+    <label>ANP Declaration Accepted</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

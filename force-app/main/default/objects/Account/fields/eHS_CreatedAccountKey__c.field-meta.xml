@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_CreatedAccountKey__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <deprecated>false</deprecated>
+    <description>This field is used by the Hidden LWC to send the newly created recordId back to the Case citizen Pane of glass LWC.</description>
+    <encryptionScheme>None</encryptionScheme>
+    <externalId>false</externalId>
+    <label>eHS_CreatedAccountKey</label>
+    <length>255</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

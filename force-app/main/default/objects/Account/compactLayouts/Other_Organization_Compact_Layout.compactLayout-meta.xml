@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Other_Organization_Compact_Layout</fullName>
+    <fields>Name</fields>
+    <fields>RecordTypeId</fields>
+    <fields>ParentId</fields>
+    <fields>Phone</fields>
+    <fields>eHS_Facility_Email__c</fields>
+    <fields>Website</fields>
+    <label>Other Organization Compact Layout</label>
+</CompactLayout>

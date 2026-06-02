@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_BusinessPhoneExt_Validation</fullName>
+    <active>true</active>
+    <description>This is not a duplicate validation rule that was created on PersonAccount. Created for BusinessAccount record type.</description>
+    <errorConditionFormula>AND(
+OR($RecordType.DeveloperName = &quot;Facility&quot;, 
+			$RecordType.DeveloperName = &quot;Corporate_Facility&quot;),
+NOT(ISBLANK(eHS_PhoneExt__c)),
+NOT(REGEX(eHS_PhoneExt__c, &quot;^[0-9]{1,6}$&quot;))
+)</errorConditionFormula>
+    <errorDisplayField>eHS_PhoneExt__c</errorDisplayField>
+    <errorMessage>Phone number extensions must be numeric and a maximum of 6 digits only</errorMessage>
+</ValidationRule>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CompactLayout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_PCN_Compact_Layout</fullName>
+    <fields>Name</fields>
+    <fields>RecordTypeId</fields>
+    <fields>OwnerId</fields>
+    <fields>Type</fields>
+    <fields>ParentId</fields>
+    <fields>eHS_Facility_Email__c</fields>
+    <label>PCN Compact Layout</label>
+</CompactLayout>

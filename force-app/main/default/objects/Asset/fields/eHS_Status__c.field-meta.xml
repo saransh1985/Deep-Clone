@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Status__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <deprecated>false</deprecated>
+    <description>Need Status to be a dependent picklist based on Asset Type field</description>
+    <externalId>false</externalId>
+    <label>Status</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>eHS_Asset_Type__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Not Started</fullName>
+                <default>false</default>
+                <label>Not Started</label>
+            </value>
+            <value>
+                <fullName>In Progress</fullName>
+                <default>false</default>
+                <label>In Progress</label>
+            </value>
+            <value>
+                <fullName>On Hold</fullName>
+                <default>false</default>
+                <label>On Hold</label>
+            </value>
+            <value>
+                <fullName>Live</fullName>
+                <default>false</default>
+                <label>Live</label>
+            </value>
+            <value>
+                <fullName>Ended</fullName>
+                <default>false</default>
+                <label>Ended</label>
+            </value>
+            <value>
+                <fullName>Withdrawn</fullName>
+                <default>false</default>
+                <label>Withdrawn</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <valueName>Not Started</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <valueName>In Progress</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <valueName>On Hold</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <controllingFieldValue>Health Information System (HIS)</controllingFieldValue>
+            <valueName>Live</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <controllingFieldValue>Health Information System (HIS)</controllingFieldValue>
+            <valueName>Ended</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>eHS Provider Initiative</controllingFieldValue>
+            <valueName>Withdrawn</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

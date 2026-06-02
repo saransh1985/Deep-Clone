@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ANP_Assets</fullName>
+    <columns>ASSET.NAME</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>PRODUCT2.NAME</columns>
+    <columns>CONTACT.NAME</columns>
+    <columns>eHS_Production_Live_Date__c</columns>
+    <columns>eHS_Production_Enabled_Date__c</columns>
+    <columns>ASSET.USAGE_END_DATE</columns>
+    <columns>ASSET.CREATED_DATE</columns>
+    <columns>eHS_Source_System__c</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ASSET.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Asset.eHS_Initiatives_and_HIS</value>
+    </filters>
+    <filters>
+        <field>PRODUCT2.NAME</field>
+        <operation>equals</operation>
+        <value>ANP</value>
+    </filters>
+    <label>ANP Assets</label>
+</ListView>

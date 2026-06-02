@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Facility_Accounts_Chiro_Dent_Opt</fullName>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>eHS_WDFA__c</columns>
+    <columns>eHS_Facility_Id__c</columns>
+    <columns>ACCOUNT.PHONE1</columns>
+    <columns>ACCOUNT.TYPE</columns>
+    <columns>ACCOUNT.RECORDTYPE</columns>
+    <columns>eHS_Status__c</columns>
+    <columns>CORE.USERS.FIRST_NAME</columns>
+    <columns>CORE.USERS.LAST_NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ACCOUNT.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Account.Facility</value>
+    </filters>
+    <filters>
+        <field>ACCOUNT.TYPE</field>
+        <operation>equals</operation>
+        <value>CHIRO,DENT,OPTO</value>
+    </filters>
+    <label>Facility Accounts Chiro, Dent, Opt</label>
+    <sharedTo>
+        <group>eHS_Analytics_Service</group>
+    </sharedTo>
+</ListView>

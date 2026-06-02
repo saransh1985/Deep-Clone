@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Status_Reason__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <deprecated>false</deprecated>
+    <externalId>false</externalId>
+    <label>Status Reason</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Picklist</type>
+    <valueSet>
+        <controllingField>eHS_Status__c</controllingField>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Activation in Progress</fullName>
+                <default>false</default>
+                <label>Activation in Progress</label>
+            </value>
+            <value>
+                <fullName>Activation Stage</fullName>
+                <default>false</default>
+                <label>Activation Stage</label>
+            </value>
+            <value>
+                <fullName>Custodian/Facility Delay</fullName>
+                <default>false</default>
+                <label>Custodian/Facility Delay</label>
+            </value>
+            <value>
+                <fullName>Customer Unresponsive</fullName>
+                <default>false</default>
+                <label>Customer Unresponsive</label>
+            </value>
+            <value>
+                <fullName>Data Validation</fullName>
+                <default>false</default>
+                <label>Data Validation</label>
+            </value>
+            <value>
+                <fullName>Declined Participation</fullName>
+                <default>false</default>
+                <label>Declined Participation</label>
+            </value>
+            <value>
+                <fullName>Facility Change</fullName>
+                <default>false</default>
+                <label>Facility Change</label>
+            </value>
+            <value>
+                <fullName>Facility Closed</fullName>
+                <default>false</default>
+                <label>Facility Closed</label>
+            </value>
+            <value>
+                <fullName>Facility Closed (waiting on closure activities)</fullName>
+                <default>false</default>
+                <label>Facility Closed (waiting on closure activities)</label>
+            </value>
+            <value>
+                <fullName>HIS Active</fullName>
+                <default>false</default>
+                <label>HIS Active</label>
+            </value>
+            <value>
+                <fullName>HIS Inactive</fullName>
+                <default>false</default>
+                <label>HIS Inactive</label>
+            </value>
+            <value>
+                <fullName>Implementation Complete</fullName>
+                <default>false</default>
+                <label>Implementation Complete</label>
+            </value>
+            <value>
+                <fullName>Implementation Package Sent</fullName>
+                <default>false</default>
+                <label>Implementation Package Sent</label>
+            </value>
+            <value>
+                <fullName>Intake</fullName>
+                <default>false</default>
+                <label>Intake</label>
+            </value>
+            <value>
+                <fullName>Messaging Confirmed</fullName>
+                <default>false</default>
+                <label>Messaging Confirmed</label>
+            </value>
+            <value>
+                <fullName>Missing Intake Information</fullName>
+                <default>false</default>
+                <label>Missing Intake Information</label>
+            </value>
+            <value>
+                <fullName>Not Eligible - Cancelled</fullName>
+                <default>false</default>
+                <label>Not Eligible - Cancelled</label>
+            </value>
+            <value>
+                <fullName>Offboarding</fullName>
+                <default>false</default>
+                <label>Offboarding</label>
+            </value>
+            <value>
+                <fullName>Other - See Notes</fullName>
+                <default>false</default>
+                <label>Other - See Notes</label>
+            </value>
+            <value>
+                <fullName>Pending PPHS Direction</fullName>
+                <default>false</default>
+                <label>Pending PPHS Direction</label>
+            </value>
+            <value>
+                <fullName>Pending Validation</fullName>
+                <default>false</default>
+                <label>Pending Validation</label>
+            </value>
+            <value>
+                <fullName>Privacy &amp; Security Risk Assessment</fullName>
+                <default>false</default>
+                <label>Privacy &amp; Security Risk Assessment</label>
+            </value>
+            <value>
+                <fullName>Privacy and Security Requirements Not Met</fullName>
+                <default>false</default>
+                <label>Privacy and Security Requirements Not Met</label>
+            </value>
+            <value>
+                <fullName>Provider Left Facility</fullName>
+                <default>false</default>
+                <label>Provider Left Facility</label>
+            </value>
+            <value>
+                <fullName>Scheduled Go-Live</fullName>
+                <default>false</default>
+                <label>Scheduled Go-Live</label>
+            </value>
+            <value>
+                <fullName>Technical Limitations</fullName>
+                <default>false</default>
+                <label>Technical Limitations</label>
+            </value>
+            <value>
+                <fullName>Technical Requirements Pending</fullName>
+                <default>false</default>
+                <label>Technical Requirements Pending</label>
+            </value>
+            <value>
+                <fullName>Vendor Issue</fullName>
+                <default>false</default>
+                <label>Vendor Issue</label>
+            </value>
+        </valueSetDefinition>
+        <valueSettings>
+            <controllingFieldValue>Not Started</controllingFieldValue>
+            <valueName>Missing Intake Information</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Not Started</controllingFieldValue>
+            <valueName>Pending Validation</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Activation Stage</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Data Validation</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Implementation Package Sent</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Intake</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Offboarding</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Privacy &amp; Security Risk Assessment</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Scheduled Go-Live</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>In Progress</controllingFieldValue>
+            <valueName>Technical Requirements Pending</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>On Hold</controllingFieldValue>
+            <valueName>Custodian/Facility Delay</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>On Hold</controllingFieldValue>
+            <valueName>Facility Change</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>On Hold</controllingFieldValue>
+            <valueName>Pending PPHS Direction</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>On Hold</controllingFieldValue>
+            <valueName>Vendor Issue</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Live</controllingFieldValue>
+            <valueName>Activation in Progress</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Live</controllingFieldValue>
+            <valueName>HIS Active</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Live</controllingFieldValue>
+            <valueName>Implementation Complete</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Live</controllingFieldValue>
+            <valueName>Messaging Confirmed</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Ended</controllingFieldValue>
+            <valueName>Facility Closed</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Ended</controllingFieldValue>
+            <valueName>Facility Closed (waiting on closure activities)</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Ended</controllingFieldValue>
+            <valueName>HIS Inactive</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Ended</controllingFieldValue>
+            <valueName>Provider Left Facility</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Customer Unresponsive</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Declined Participation</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Not Eligible - Cancelled</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Other - See Notes</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Privacy and Security Requirements Not Met</valueName>
+        </valueSettings>
+        <valueSettings>
+            <controllingFieldValue>Withdrawn</controllingFieldValue>
+            <valueName>Technical Limitations</valueName>
+        </valueSettings>
+    </valueSet>
+</CustomField>

@@ -1,0 +1,29 @@
+﻿{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "RecordType",
+          "url": "/services/data/v66.0/sobjects/RecordType/012OM0000004kXLYAY"
+        },
+        "Id": "012OM0000004kXLYAY",
+        "DeveloperName": "Facility",
+        "Name": "Facility",
+        "SobjectType": "Account",
+        "IsActive": true,
+        "LastModifiedDate": "2026-05-26T19:45:14.000+0000",
+        "LastModifiedBy": {
+          "attributes": {
+            "type": "User",
+            "url": "/services/data/v66.0/sobjects/User/005OM000001yPUPYA2"
+          },
+          "Name": "Natalia Nikishina"
+        }
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_All_Provider_Healthcare_Acc</fullName>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>ACCOUNT.PHONE1</columns>
+    <columns>PC_EMAIL</columns>
+    <columns>ACCOUNT.TYPE</columns>
+    <columns>eHS_PCN_Affiliation__c</columns>
+    <columns>ACCOUNT.RECORDTYPE</columns>
+    <columns>CORE.USERS.FIRST_NAME</columns>
+    <columns>CORE.USERS.LAST_NAME</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ACCOUNT.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>PersonAccount.eHS_Healthcare_Staff,PersonAccount.eHS_College_Credentialed_Provider</value>
+    </filters>
+    <label>All Provider &amp; Healthcare Staff Accounts</label>
+    <sharedTo>
+        <group>eHS_Analytics_Service</group>
+        <group>eHS_Application_Support_Service</group>
+        <group>eHS_Coordinating_Agent_Service</group>
+        <group>eHS_Data_Management_Service</group>
+        <group>eHS_Privacy_and_Security_Service</group>
+        <group>eHS_Tier_1_Provider_Contact_Centre_Servi</group>
+        <group>eHS_Tier_2</group>
+    </sharedTo>
+</ListView>

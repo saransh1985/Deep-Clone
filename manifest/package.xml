@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>DeepCloneController</members>
+        <members>DeepCloneControllerTest</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>deepClone</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>Account.Deep_Clone</members>
+        <name>QuickAction</name>
+    </types>
+    <types>
+        <members>eHS_Facility_Account_Page</members>
+        <name>FlexiPage</name>
+    </types>
+    <types>
+        <members>Account-eHS_Facility</members>
+        <name>Layout</name>
+    </types>
+    <types>
+        <members>Account</members>
+        <members>AccountContactRelation</members>
+        <members>Asset</members>
+        <members>BusinessLicense</members>
+        <members>CareProgramTeamMember</members>
+        <members>HealthcareFacility</members>
+        <members>Identifier</members>
+        <members>HealthCloudGA__AccountAccountRelation__c</members>
+        <members>HealthCloudGA__ReciprocalRole__c</members>
+        <name>CustomObject</name>
+    </types>
+    <version>66.0</version>
+</Package>

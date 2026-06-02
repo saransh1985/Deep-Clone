@@ -1,0 +1,27 @@
+﻿{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "LightningComponentBundle",
+          "url": "/services/data/v66.0/tooling/sobjects/LightningComponentBundle/0RbAw000003ffS5KAI"
+        },
+        "DeveloperName": "deepClone",
+        "MasterLabel": "Deep Clone",
+        "ApiVersion": 66,
+        "LastModifiedDate": "2026-05-30T22:04:22.000+0000",
+        "LastModifiedBy": {
+          "attributes": {
+            "type": "User",
+            "url": "/services/data/v66.0/tooling/sobjects/User/005au000002N7qrAAC"
+          },
+          "Name": "Saransh Bharadwaj"
+        }
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

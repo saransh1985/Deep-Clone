@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_PHN_Validation</fullName>
+    <active>true</active>
+    <errorConditionFormula>NOT(ISBLANK(eHS_PHN__pc)) &amp;&amp; NOT(REGEX(eHS_PHN__pc, &quot;^[0-9]{5}-[0-9]{4}$&quot;))</errorConditionFormula>
+    <errorDisplayField>eHS_PHN__pc</errorDisplayField>
+    <errorMessage>PHN must be numeric and format should be #####-####</errorMessage>
+</ValidationRule>

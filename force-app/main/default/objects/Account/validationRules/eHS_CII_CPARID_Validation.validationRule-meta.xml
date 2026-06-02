@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_CII_CPARID_Validation</fullName>
+    <active>true</active>
+    <description>To ensure user enters a value that is non-numeric characters.</description>
+    <errorConditionFormula>OR(
+    LEN(eHS_CII_CPAR_ID__c) &gt; 6,
+    NOT(REGEX(eHS_CII_CPAR_ID__c, &quot;^[a-zA-Z0-9]{0,6}$&quot;))
+)</errorConditionFormula>
+    <errorDisplayField>eHS_CII_CPAR_ID__c</errorDisplayField>
+    <errorMessage>Please enter a valid CII/CPAR ID using only letters and numbers, up to 6 characters. Special characters are not allowed.</errorMessage>
+</ValidationRule>

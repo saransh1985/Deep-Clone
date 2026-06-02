@@ -1,0 +1,33 @@
+DeepCloneControllerTest validation
+
+Source org: ehdata
+Org Id: 00DAw00000DxYnlMAF
+Username: saransh.bharadwaj@ah2nd.org.ehdata
+Test run id: 707Aw00001KpRoZ
+
+Summary
+
+- Outcome: Passed
+- Tests ran: 12
+- Pass rate: 100%
+- Fail rate: 0%
+- Skip rate: 0%
+- DeepCloneController coverage: 80%
+- Test setup time: 4658 ms
+- Test execution time: 22501 ms
+- Test total time: 27159 ms
+- Org wide coverage: 27%
+
+Passing tests
+
+- DeepCloneControllerTest.callableQueuesDeepCloneByDefaultForIp
+- DeepCloneControllerTest.callableRunsSynchronouslyWhenIpRequestsSync
+- DeepCloneControllerTest.cloneFacilityCreatesNewFacilityAndClonesAssets
+- DeepCloneControllerTest.cloneFacilityRemovesOldHealthcareFacilityBeforeCarryForward
+- DeepCloneControllerTest.cloneFacilityRequiresNewValuesForChangedIdentifiers
+- DeepCloneControllerTest.cloneFacilityReusesExistingIdentifierHistoryKeys
+- DeepCloneControllerTest.cloneFacilityRollsBackEveryChangeWhenAnyStepFails
+- DeepCloneControllerTest.findsHealthcareFacilityCreatedForNewAccount
+- DeepCloneControllerTest.getContextReturnsCurrentIdentifierValues
+- DeepCloneControllerTest.hpfEffectiveToMovesAfterSameDayEffectiveFrom
+- DeepCloneControllerTest.newFacilityInsertAllowsDuplicateRuleSave

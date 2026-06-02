@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Phone_Num_Validation</fullName>
+    <active>true</active>
+    <errorConditionFormula>OR(
+  AND(
+    NOT(ISBLANK(Phone)),
+    NOT(REGEX(Phone, &quot;^\\+?[0-9\\-\\(\\)\\s]{7,20}$&quot;))
+  ),
+  AND(
+    NOT(ISBLANK(PersonOtherPhone)),
+    NOT(REGEX(PersonOtherPhone, &quot;^\\+?[0-9\\-\\(\\)\\s]{7,20}$&quot;))
+  )
+)</errorConditionFormula>
+    <errorMessage>Phone fields must contain numbers only.</errorMessage>
+</ValidationRule>

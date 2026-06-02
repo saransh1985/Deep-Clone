@@ -1,0 +1,27 @@
+﻿{
+  "status": 0,
+  "result": {
+    "records": [
+      {
+        "attributes": {
+          "type": "Layout",
+          "url": "/services/data/v66.0/tooling/sobjects/Layout/00hOM000001PamBYAS"
+        },
+        "Id": "00hOM000001PamBYAS",
+        "Name": "eHS_Facility",
+        "TableEnumOrId": "Account",
+        "LastModifiedDate": "2026-05-26T22:03:11.000+0000",
+        "LastModifiedBy": {
+          "attributes": {
+            "type": "User",
+            "url": "/services/data/v66.0/tooling/sobjects/User/005OM000001yPUPYA2"
+          },
+          "Name": "Natalia Nikishina"
+        }
+      }
+    ],
+    "totalSize": 1,
+    "done": true
+  },
+  "warnings": []
+}

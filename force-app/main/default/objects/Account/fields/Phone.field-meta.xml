@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Phone</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <encryptionScheme>CaseInsensitiveDeterministicEncryption</encryptionScheme>
+    <inlineHelpText>This is the primary phone number. Enter only 10 digit North American phone numbers including area code.</inlineHelpText>
+    <trackFeedHistory>true</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+</CustomField>

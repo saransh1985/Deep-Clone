@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_PIA_Requirements_Met__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <defaultValue>false</defaultValue>
+    <deprecated>false</deprecated>
+    <description>Indicates if eHS PIA Requirements Met</description>
+    <externalId>false</externalId>
+    <label>PIA Requirements Met</label>
+    <securityClassification>MissionCritical</securityClassification>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

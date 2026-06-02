@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_CII_CPAR_ID__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <deprecated>false</deprecated>
+    <description>The identification number used for CII/CPAR onboarding.</description>
+    <encryptionScheme>None</encryptionScheme>
+    <externalId>false</externalId>
+    <inlineHelpText>This ID number is used for CII/CPAR onboarding only. It may be the Facility ID, the RN assigned WDFA or Public Health Facility WDFA.</inlineHelpText>
+    <label>CII/CPAR ID</label>
+    <length>6</length>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

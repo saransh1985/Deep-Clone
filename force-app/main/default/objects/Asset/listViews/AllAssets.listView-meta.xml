@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>AllAssets</fullName>
+    <columns>ASSET.NAME</columns>
+    <columns>ACCOUNT.NAME</columns>
+    <columns>PRODUCT2.NAME</columns>
+    <columns>CONTACT.NAME</columns>
+    <columns>eHS_Production_Live_Date__c</columns>
+    <columns>eHS_Production_Enabled_Date__c</columns>
+    <columns>ASSET.USAGE_END_DATE</columns>
+    <filterScope>Everything</filterScope>
+    <filters>
+        <field>ASSET.RECORDTYPE</field>
+        <operation>equals</operation>
+        <value>Asset.eHS_Initiatives_and_HIS</value>
+    </filters>
+    <filters>
+        <field>ASSET.NAME</field>
+        <operation>contains</operation>
+        <value>CIICPAR-Encounters</value>
+    </filters>
+    <label>All Assets</label>
+</ListView>

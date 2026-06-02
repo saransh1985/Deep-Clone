@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Not_a_Duplicate__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <defaultValue>false</defaultValue>
+    <deprecated>false</deprecated>
+    <description>This field will be used for potential duplicate records that are determined not to be actual duplicates.</description>
+    <externalId>false</externalId>
+    <inlineHelpText>Use this field to indicate that a record identified as a potential duplicate has been reviewed and determined not to be an actual duplicate.</inlineHelpText>
+    <label>Not a Duplicate</label>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>

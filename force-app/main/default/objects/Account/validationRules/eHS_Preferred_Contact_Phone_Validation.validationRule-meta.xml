@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Preferred_Contact_Phone_Validation</fullName>
+    <active>true</active>
+    <description>Checks if Phone field is populated when Phone is selected as Preferred method of contact</description>
+    <errorConditionFormula>AND(
+    OR(
+        $RecordType.DeveloperName = &quot;Citizen&quot;,
+        $RecordType.DeveloperName = &quot;eHS_College_Credentialed_Provider&quot;
+    ),
+    ISPICKVAL(eHS_Preferred_Contact_Method__pc, &quot;Phone&quot;),
+    ISBLANK(Phone)
+)</errorConditionFormula>
+    <errorDisplayField>Phone</errorDisplayField>
+    <errorMessage>Phone is required when Preferred Contact Method is Phone.</errorMessage>
+</ValidationRule>

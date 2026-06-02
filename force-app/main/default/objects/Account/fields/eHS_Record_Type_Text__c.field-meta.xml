@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Record_Type_Text__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <defaultValue>IF(
+  OR(
+    $RecordType.DeveloperName = &quot;eHS_College_Credentialed_Provider&quot;,
+    $RecordType.DeveloperName = &quot;eHS_Healthcare_Staff&quot; ),
+  &quot;Provider&quot;,
+  $RecordType.DeveloperName
+)</defaultValue>
+    <deprecated>false</deprecated>
+    <description>This field is used in the matching rule to store the record type during record creation using default value.</description>
+    <encryptionScheme>None</encryptionScheme>
+    <externalId>false</externalId>
+    <label>Record Type Text</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <type>TextArea</type>
+</CustomField>

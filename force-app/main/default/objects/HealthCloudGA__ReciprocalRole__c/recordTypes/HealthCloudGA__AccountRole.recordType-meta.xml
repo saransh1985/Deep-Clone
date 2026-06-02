@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>HealthCloudGA__AccountRole</fullName>
+    <active>true</active>
+    <description>Roles associated with Account-Account Relationships</description>
+    <label>Account Role</label>
+    <picklistValues>
+        <picklist>HealthCloudGA__RelationshipType__c</picklist>
+        <values>
+            <fullName>Account Account Relation</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

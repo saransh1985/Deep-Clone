@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Production_Live_Date__c</fullName>
+    <businessOwnerGroup>eHS_Data_Management_Service</businessOwnerGroup>
+    <businessStatus>Active</businessStatus>
+    <deprecated>false</deprecated>
+    <description>Represents date when data is flowing into Netcare/CPAR</description>
+    <encryptionScheme>None</encryptionScheme>
+    <externalId>false</externalId>
+    <inlineHelpText>Represents date when data is flowing into Netcare/CPAR</inlineHelpText>
+    <label>Production Live Date</label>
+    <required>false</required>
+    <trackHistory>true</trackHistory>
+    <type>Date</type>
+</CustomField>

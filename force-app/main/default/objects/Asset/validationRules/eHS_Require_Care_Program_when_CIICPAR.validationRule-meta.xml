@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>eHS_Require_Care_Program_when_CIICPAR</fullName>
+    <active>true</active>
+    <description>On the eHS Initiatives and HIS record type, Care Program can only be populated when Contact is not blank and Product is CIICPAR - CPAR. Care Program is never required.</description>
+    <errorConditionFormula>AND(
+    RecordType.DeveloperName = &quot;eHS_Initiatives_and_HIS&quot;,
+    NOT(ISBLANK(eHS_Care_Program__c)),
+    OR(
+        ISBLANK(ContactId),
+        Product2.Name &lt;&gt; &quot;CIICPAR - CPAR&quot;
+    )
+)</errorConditionFormula>
+    <errorDisplayField>eHS_Care_Program__c</errorDisplayField>
+    <errorMessage>Care Program can only be populated when Contact is not empty and Product is CIICPAR - CPAR. Please clear the Care Program field, or ensure Contact is not empty and Product is CIICPAR - CPAR.</errorMessage>
+</ValidationRule>
