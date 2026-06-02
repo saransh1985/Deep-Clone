@@ -1,0 +1,249 @@
+<template>
+  <!-- Uses Salesforce's standard quick action modal structure for a native Lightning look. -->
+  <lightning-quick-action-panel header="Deep Clone">
+    <!-- Keeps the modal body compact so content starts close to the standard header. -->
+    <div class="panel-body">
+      <!-- Shows a loading state while the component reads the Account details. -->
+      <template lwc:if={isLoading}>
+        <div class="state state_center">
+          <lightning-spinner
+            alternative-text="Loading Deep Clone"
+            size="medium"
+          ></lightning-spinner>
+        </div>
+      </template>
+
+      <!-- Shows an error state if the Account context could not be loaded. -->
+      <template lwc:if={showLoadError}>
+        <div class="state">
+          <div
+            class="slds-notify slds-notify_alert slds-alert_error"
+            role="alert"
+          >
+            <span class="slds-assistive-text">Error</span>
+            <h2>{loadError}</h2>
+          </div>
+        </div>
+      </template>
+
+      <!-- Shows a blocked state when the Account is not record type Facility. -->
+      <template lwc:if={showBlocked}>
+        <div class="state">
+          <div
+            class="slds-notify slds-notify_alert slds-alert_warning"
+            role="alert"
+          >
+            <span class="slds-assistive-text">Warning</span>
+            <h2>This action only works for Account record type Facility.</h2>
+          </div>
+          <p class="muted slds-m-top_x-small">{recordTypeLabel}</p>
+        </div>
+      </template>
+
+      <!-- Shows the main Deep Clone form after loading succeeds. -->
+      <template lwc:if={showForm}>
+        <section class="account-summary">
+          <lightning-layout vertical-align="center">
+            <lightning-layout-item flexibility="auto">
+              <p class="eyebrow">Facility action</p>
+              <h2 class="account-name">{accountName}</h2>
+            </lightning-layout-item>
+            <lightning-layout-item>
+              <lightning-icon
+                icon-name="standard:account"
+                size="small"
+              ></lightning-icon>
+            </lightning-layout-item>
+          </lightning-layout>
+        </section>
+
+        <!-- Shows current Facility values. -->
+        <section class="identifier-panel slds-box slds-theme_default">
+          <lightning-layout multiple-rows>
+            <template for:each={summaryValues} for:item="summary">
+              <lightning-layout-item
+                key={summary.label}
+                size="12"
+                small-device-size="6"
+                medium-device-size="3"
+                padding="horizontal-small"
+                class="identifier-item"
+              >
+                <p class="field-label">{summary.label}</p>
+                <p class="field-value">{summary.value}</p>
+              </lightning-layout-item>
+            </template>
+          </lightning-layout>
+        </section>
+
+        <!-- Contains the change questions for Facility details and identifiers. -->
+        <section class="questions">
+          <template for:each={questionRows} for:item="row">
+            <div class="question-row" key={row.toggleField}>
+              <lightning-layout multiple-rows vertical-align="center">
+                <lightning-layout-item
+                  size="12"
+                  medium-device-size="5"
+                  padding="horizontal-small"
+                  class="question-control"
+                >
+                  <lightning-input
+                    type="toggle"
+                    label={row.toggleLabel}
+                    data-field={row.toggleField}
+                    checked={row.checked}
+                    message-toggle-active=""
+                    message-toggle-inactive=""
+                    onchange={handleToggle}
+                    disabled={isCloning}
+                  ></lightning-input>
+                </lightning-layout-item>
+                <lightning-layout-item
+                  size="12"
+                  medium-device-size="7"
+                  padding="horizontal-small"
+                  class="question-input"
+                >
+                  <template lwc:if={row.showInput}>
+                    <template lwc:if={row.isAddress}>
+                      <lightning-input-address
+                        address-label={row.inputLabel}
+                        street-label="Street"
+                        city-label="City"
+                        province-label="State"
+                        postal-code-label="Postal Code"
+                        country-label="Country"
+                        street={row.street}
+                        city={row.city}
+                        province={row.province}
+                        postal-code={row.postalCode}
+                        country={row.country}
+                        onchange={handleAddressInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input-address>
+                    </template>
+                    <template lwc:if={row.isDate}>
+                      <lightning-input
+                        type="date"
+                        label={row.inputLabel}
+                        data-field={row.valueField}
+                        value={row.value}
+                        onchange={handleInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input>
+                    </template>
+                    <template lwc:if={row.isText}>
+                      <lightning-input
+                        type="text"
+                        label={row.inputLabel}
+                        data-field={row.valueField}
+                        value={row.value}
+                        onchange={handleInput}
+                        disabled={isCloning}
+                        required
+                      ></lightning-input>
+                    </template>
+                  </template>
+                  <template lwc:if={row.showCarryForward}>
+                    <div class="carry-forward slds-box slds-theme_shade">
+                      <p class="field-label">Carry forward</p>
+                      <p class="field-value">{row.currentValue}</p>
+                    </div>
+                  </template>
+                </lightning-layout-item>
+              </lightning-layout>
+            </div>
+          </template>
+        </section>
+
+        <!-- Shows any clone error returned by Apex after rollback. -->
+        <template lwc:if={cloneError}>
+          <div
+            class="slds-notify slds-notify_alert slds-alert_error clone-alert"
+            role="alert"
+          >
+            <span class="slds-assistive-text">Error</span>
+            <h2>{cloneError}</h2>
+          </div>
+        </template>
+      </template>
+
+      <!-- Shows the blocking progress modal while Apex is cloning records. -->
+      <template lwc:if={isCloning}>
+        <section
+          class="progress-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Deep Clone progress"
+        >
+          <div class="progress-dialog">
+            <div class="progress-dialog__header">
+              <div class="progress-ring">
+                <lightning-progress-ring
+                  value={progressValue}
+                  size="large"
+                ></lightning-progress-ring>
+                <lightning-spinner
+                  alternative-text="Deep Clone in progress"
+                  size="small"
+                ></lightning-spinner>
+              </div>
+              <div>
+                <h3>Deep Clone in progress</h3>
+                <p class="muted">{activeProgressLabel}</p>
+              </div>
+            </div>
+            <ol class="progress-list">
+              <template for:each={progressSteps} for:item="step">
+                <li key={step.key} class={step.className}>
+                  <span class="step-status">
+                    <template lwc:if={step.isDone}>
+                      <lightning-icon
+                        icon-name="utility:success"
+                        size="xx-small"
+                        alternative-text="Done"
+                      ></lightning-icon>
+                    </template>
+                    <template lwc:if={step.isActive}>
+                      <lightning-spinner
+                        alternative-text="Current step"
+                        size="small"
+                      ></lightning-spinner>
+                    </template>
+                  </span>
+                  <span>{step.label}</span>
+                  <template lwc:if={step.countLabel}>
+                    <lightning-badge label={step.countLabel}></lightning-badge>
+                  </template>
+                </li>
+              </template>
+            </ol>
+          </div>
+        </section>
+      </template>
+    </div>
+
+    <!-- Uses the standard quick action footer slot so there is proper space below the buttons. -->
+    <div slot="footer" class="footer-actions">
+      <lightning-button
+        data-id="cancel"
+        label="Cancel"
+        icon-name="utility:close"
+        onclick={handleCancel}
+        disabled={isCloning}
+      ></lightning-button>
+      <template lwc:if={showForm}>
+        <lightning-button
+          data-id="start"
+          variant="brand"
+          label="Start Deep Clone"
+          icon-name="utility:copy"
+          onclick={handleStart}
+          disabled={isStartDisabled}
+        ></lightning-button>
+      </template>
+    </div>
+  </lightning-quick-action-panel>
+</template>
