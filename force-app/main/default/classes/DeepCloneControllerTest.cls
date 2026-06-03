@@ -345,6 +345,58 @@ private class DeepCloneControllerTest {
   }
 
   @IsTest
+  static void closeFacilityRollsBackAfterChildUpdatesFail() {
+    Account facility = [
+      SELECT Id
+      FROM Account
+      WHERE Name = :OLD_ACCOUNT_NAME
+      LIMIT 1
+    ];
+    Date requestedEndDate = Date.today().addDays(15);
+    DeepCloneController.CloseFacilityRequest request = new DeepCloneController.CloseFacilityRequest();
+    request.endDate = requestedEndDate;
+
+    DeepCloneController.bypassFacilityCheckForTests = true;
+    DeepCloneController.forceFailureForTests = true;
+
+    try {
+      DeepCloneController.closeFacility(facility.Id, request);
+      System.assert(false, 'The forced child-update rollback should throw.');
+    } catch (Exception ex) {
+      System.assert(
+        ex.getMessage().contains('Forced rollback test failure'),
+        ex.getMessage()
+      );
+    } finally {
+      DeepCloneController.forceFailureForTests = false;
+    }
+
+    SObject afterRollback = queryAccount(facility.Id);
+    System.assertEquals(true, afterRollback.get('IsActive'));
+    if (hasField('Account', 'EndDate')) {
+      System.assertNotEquals(
+        requestedEndDate,
+        dateValue(afterRollback.get('EndDate')),
+        'Close Facility should roll the Facility End Date back.'
+      );
+    }
+    if (hasField('Account', 'eHS_WDFA__c')) {
+      System.assertEquals('WDFA-OLD', afterRollback.get('eHS_WDFA__c'));
+    }
+    if (hasObject('Asset')) {
+      for (SObject asset : queryAssets(facility.Id)) {
+        if (hasField('Asset', 'UsageEndDate')) {
+          System.assertNotEquals(
+            requestedEndDate,
+            dateValue(asset.get('UsageEndDate')),
+            'Close Facility should roll child record End Dates back.'
+          );
+        }
+      }
+    }
+  }
+
+  @IsTest
   static void facilityNameDrivenChildNamesUseRequestedConventions() {
     System.assertEquals(
       'AHS IAM | New Facility',

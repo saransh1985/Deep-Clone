@@ -197,12 +197,12 @@
         </template>
       </template>
 
-      <template lwc:if={isCloning}>
+      <template lwc:if={showProgressModal}>
         <section
           class="progress-modal"
           role="dialog"
           aria-modal="true"
-          aria-label="Deep Clone progress"
+          aria-label={progressTitle}
         >
           <div class="progress-dialog">
             <div class="progress-dialog__header">
@@ -212,12 +212,12 @@
                   size="large"
                 ></lightning-progress-ring>
                 <lightning-spinner
-                  alternative-text="Deep Clone in progress"
+                  alternative-text={progressTitle}
                   size="small"
                 ></lightning-spinner>
               </div>
               <div>
-                <h3>Deep Clone in progress</h3>
+                <h3>{progressTitle}</h3>
                 <p class="muted">{activeProgressLabel}</p>
               </div>
             </div>
@@ -270,6 +270,15 @@
           icon-name="utility:forward"
           onclick={handleNext}
           disabled={isNextDisabled}
+        ></lightning-button>
+      </template>
+      <template lwc:if={showBackButton}>
+        <lightning-button
+          data-id="back"
+          label="Back"
+          icon-name="utility:back"
+          onclick={handleBack}
+          disabled={isBusy}
         ></lightning-button>
       </template>
       <template lwc:if={showDeepCloneForm}>

@@ -3,6 +3,7 @@
 import { LightningElement, api, wire } from "lwc";
 import { CloseActionScreenEvent } from "lightning/actions";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
+import { RefreshEvent } from "lightning/refresh";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import getContext from "@salesforce/apex/DeepCloneController.getContext";
@@ -28,11 +29,19 @@ const ACTION_OPTIONS = [
   }
 ];
 
-const STEP_LABELS = [
+const CLONE_STEP_LABELS = [
   "Facility",
   "Care Program Team Members",
   "Healthcare Practitioner Facilities",
   "Business Licenses",
+  "Assets"
+];
+
+const CLOSE_STEP_LABELS = [
+  "Facility",
+  "Identifiers",
+  "Care Program Team Members",
+  "Healthcare Practitioner Facilities",
   "Assets"
 ];
 
@@ -363,6 +372,24 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     return this.isBusy || !this.hasSelectedAction;
   }
 
+  get showBackButton() {
+    return this.showDeepCloneForm || this.showCloseFacilityForm;
+  }
+
+  get showProgressModal() {
+    return this.isCloning || this.isClosing;
+  }
+
+  get progressTitle() {
+    return this.isClosing
+      ? "Close Facility in progress"
+      : "Deep Clone in progress";
+  }
+
+  get currentStepLabels() {
+    return this.isClosing ? CLOSE_STEP_LABELS : CLONE_STEP_LABELS;
+  }
+
   /**
    * Purpose: Disables the Start button while loading, cloning, blocked by record type, or no slider is selected.
    */
@@ -379,23 +406,25 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    * Purpose: Converts completed progress steps into a percentage for the circular progress ring.
    */
   get progressValue() {
+    const stepCount = this.currentStepLabels.length;
     return Math.round(
-      ((this.completedStepIndex + 1) / STEP_LABELS.length) * 100
+      ((this.completedStepIndex + 1) / stepCount) * 100
     );
   }
 
   /**
-   * Purpose: Shows the user which high-level clone step is currently active.
+   * Purpose: Shows the user which high-level action step is currently active.
    */
   get activeProgressLabel() {
-    return `Working on ${STEP_LABELS[this.activeStepIndex]}.`;
+    const label = this.currentStepLabels[this.activeStepIndex];
+    return `${this.isClosing ? "Updating" : "Working on"} ${label}.`;
   }
 
   /**
    * Purpose: Builds the progress modal rows with active, done, and waiting state values for the template.
    */
   get progressSteps() {
-    return STEP_LABELS.map((label, index) => {
+    return this.currentStepLabels.map((label, index) => {
       const state =
         index <= this.completedStepIndex
           ? "done"
@@ -482,6 +511,12 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       this.selectedAction === ACTION_CLOSE ? SCREEN_CLOSE : SCREEN_DEEP_CLONE;
   }
 
+  handleBack() {
+    this.cloneError = undefined;
+    this.clearCustomValidity();
+    this.screen = SCREEN_ACTION;
+  }
+
   /**
    * Purpose: Updates the form when a user turns one of the yes/no change toggles on or off.
    */
@@ -550,7 +585,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
         request: this.buildCloneRequest()
       });
       this.applyResultSteps(result.steps || []);
-      this.completedStepIndex = STEP_LABELS.length - 1;
+      this.completedStepIndex = this.currentStepLabels.length - 1;
       this.stopProgress();
       this.showToast(
         "Deep Clone complete",
@@ -575,12 +610,21 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     }
 
     this.isClosing = true;
+    this.activeStepIndex = 0;
+    this.completedStepIndex = -1;
+    this.resultStepCounts = {};
+    this.startProgress();
+
     try {
       const result = await closeFacility({
         recordId: this.recordId,
         request: this.buildCloseRequest()
       });
+      this.applyResultSteps(result.steps || []);
+      this.completedStepIndex = this.currentStepLabels.length - 1;
+      this.stopProgress();
       await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      this.dispatchEvent(new RefreshEvent());
       this.showToast(
         "Facility closed",
         result?.message || "The Facility has been closed.",
@@ -588,6 +632,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       );
       this.dispatchEvent(new CloseActionScreenEvent());
     } catch (error) {
+      this.stopProgress();
       this.cloneError = this.normalizeError(error);
       this.showToast("Close Facility failed", this.cloneError, "error");
     } finally {
@@ -725,7 +770,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     this.stopProgress();
     // eslint-disable-next-line @lwc/lwc/no-async-operation
     this.progressTimer = window.setInterval(() => {
-      if (this.activeStepIndex < STEP_LABELS.length - 1) {
+      if (this.activeStepIndex < this.currentStepLabels.length - 1) {
         this.completedStepIndex = Math.max(
           this.completedStepIndex,
           this.activeStepIndex - 1
@@ -750,8 +795,9 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   applyResultSteps(steps) {
     const counts = {};
+    const stepLabels = this.currentStepLabels;
     steps.forEach((step) => {
-      if (STEP_LABELS.includes(step.name)) {
+      if (stepLabels.includes(step.name)) {
         counts[step.name] = step.count;
       }
     });
