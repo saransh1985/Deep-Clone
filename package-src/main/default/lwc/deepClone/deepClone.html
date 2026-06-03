@@ -1,5 +1,5 @@
 <template>
-  <lightning-quick-action-panel header="Deep Clone">
+  <lightning-quick-action-panel header={panelHeader}>
     <div class="panel-body">
       <template lwc:if={isLoading}>
         <div class="state state_center">
@@ -79,75 +79,122 @@
           </lightning-layout>
         </section>
 
-        <section class="questions">
-          <template for:each={questionRows} for:item="row">
-            <div class="question-row" key={row.toggleField}>
-              <lightning-layout multiple-rows vertical-align="center">
-                <lightning-layout-item
-                  size="12"
-                  medium-device-size="5"
-                  padding="horizontal-small"
-                  class="question-control"
-                >
-                  <lightning-input
-                    type="toggle"
-                    label={row.toggleLabel}
-                    data-field={row.toggleField}
-                    checked={row.checked}
-                    message-toggle-active=""
-                    message-toggle-inactive=""
-                    onchange={handleToggle}
-                    disabled={isCloning}
-                  ></lightning-input>
-                </lightning-layout-item>
-                <lightning-layout-item
-                  size="12"
-                  medium-device-size="7"
-                  padding="horizontal-small"
-                  class="question-input"
-                >
-                  <template lwc:if={row.showInput}>
-                    <template lwc:if={row.isAddress}>
-                      <lightning-input-address
-                        address-label={row.inputLabel}
-                        street-label="Street"
-                        city-label="City"
-                        province-label="State"
-                        postal-code-label="Postal Code"
-                        country-label="Country"
-                        street={row.street}
-                        city={row.city}
-                        province={row.province}
-                        postal-code={row.postalCode}
-                        country={row.country}
-                        onchange={handleAddressInput}
-                        disabled={isCloning}
-                      ></lightning-input-address>
+        <template lwc:if={showActionChoice}>
+          <section class="action-options">
+            <template for:each={actionOptions} for:item="option">
+              <div class="action-row" key={option.value}>
+                <lightning-input
+                  type="toggle"
+                  label={option.label}
+                  variant="label-hidden"
+                  data-action={option.value}
+                  checked={option.checked}
+                  message-toggle-active=""
+                  message-toggle-inactive=""
+                  onchange={handleActionToggle}
+                  disabled={isBusy}
+                ></lightning-input>
+                <div class="action-copy">
+                  <h3>{option.label}</h3>
+                  <p class="muted">{option.description}</p>
+                </div>
+              </div>
+            </template>
+          </section>
+        </template>
+
+        <template lwc:if={showDeepCloneForm}>
+          <section class="questions">
+            <template for:each={questionRows} for:item="row">
+              <div class="question-row" key={row.toggleField}>
+                <lightning-layout multiple-rows vertical-align="center">
+                  <lightning-layout-item
+                    size="12"
+                    medium-device-size="5"
+                    padding="horizontal-small"
+                    class="question-control"
+                  >
+                    <lightning-input
+                      type="toggle"
+                      label={row.toggleLabel}
+                      data-field={row.toggleField}
+                      checked={row.checked}
+                      message-toggle-active=""
+                      message-toggle-inactive=""
+                      onchange={handleToggle}
+                      disabled={isBusy}
+                    ></lightning-input>
+                  </lightning-layout-item>
+                  <lightning-layout-item
+                    size="12"
+                    medium-device-size="7"
+                    padding="horizontal-small"
+                    class="question-input"
+                  >
+                    <template lwc:if={row.showInput}>
+                      <template lwc:if={row.isAddress}>
+                        <lightning-input-address
+                          address-label={row.inputLabel}
+                          street-label="Street"
+                          city-label="City"
+                          province-label="State"
+                          postal-code-label="Postal Code"
+                          country-label="Country"
+                          street={row.street}
+                          city={row.city}
+                          province={row.province}
+                          postal-code={row.postalCode}
+                          country={row.country}
+                          onchange={handleAddressInput}
+                          disabled={isBusy}
+                        ></lightning-input-address>
+                      </template>
+                      <template lwc:if={row.isScalar}>
+                        <lightning-input
+                          type={row.inputType}
+                          label={row.inputLabel}
+                          data-field={row.valueField}
+                          value={row.value}
+                          onchange={handleInput}
+                          disabled={isBusy}
+                          message-when-value-missing={row.requiredMessage}
+                          required
+                        ></lightning-input>
+                      </template>
                     </template>
-                    <template lwc:if={row.isScalar}>
-                      <lightning-input
-                        type={row.inputType}
-                        label={row.inputLabel}
-                        data-field={row.valueField}
-                        value={row.value}
-                        onchange={handleInput}
-                        disabled={isCloning}
-                        message-when-value-missing={row.requiredMessage}
-                        required
-                      ></lightning-input>
+                    <template lwc:if={row.showCarryForward}>
+                      <div class="carry-forward slds-box slds-theme_shade">
+                        <p class="field-label">Carry forward</p>
+                        <p class="field-value">{row.currentValue}</p>
+                      </div>
                     </template>
-                  </template>
-                  <template lwc:if={row.showCarryForward}>
-                    <div class="carry-forward slds-box slds-theme_shade">
-                      <p class="field-label">Carry forward</p>
-                      <p class="field-value">{row.currentValue}</p>
-                    </div>
-                  </template>
-                </lightning-layout-item>
-              </lightning-layout>
-            </div>
-          </template>
-        </section>
+                  </lightning-layout-item>
+                </lightning-layout>
+              </div>
+            </template>
+          </section>
+        </template>
+
+        <template lwc:if={showCloseFacilityForm}>
+          <section class="close-form">
+            <lightning-input
+              type="date"
+              label="Start Date"
+              value={closeStartDate}
+              disabled
+            ></lightning-input>
+            <lightning-input
+              type="date"
+              label="End Date"
+              data-field="endDate"
+              value={closeForm.endDate}
+              onchange={handleCloseInput}
+              disabled={isBusy}
+              message-when-value-missing="End Date is required."
+              required
+            ></lightning-input>
+          </section>
+        </template>
       </template>
 
       <template lwc:if={isCloning}>
@@ -213,9 +260,19 @@
         label="Cancel"
         icon-name="utility:close"
         onclick={handleCancel}
-        disabled={isCloning}
+        disabled={isBusy}
       ></lightning-button>
-      <template lwc:if={showForm}>
+      <template lwc:if={showActionChoice}>
+        <lightning-button
+          data-id="next"
+          variant="brand"
+          label="Next"
+          icon-name="utility:forward"
+          onclick={handleNext}
+          disabled={isNextDisabled}
+        ></lightning-button>
+      </template>
+      <template lwc:if={showDeepCloneForm}>
         <lightning-button
           data-id="start"
           variant="brand"
@@ -223,6 +280,16 @@
           icon-name="utility:copy"
           onclick={handleStart}
           disabled={isStartDisabled}
+        ></lightning-button>
+      </template>
+      <template lwc:if={showCloseFacilityForm}>
+        <lightning-button
+          data-id="finish"
+          variant="brand"
+          label="Finish"
+          icon-name="utility:check"
+          onclick={handleFinish}
+          disabled={isBusy}
         ></lightning-button>
       </template>
     </div>

@@ -206,9 +206,142 @@ private class DeepCloneControllerTest {
           System.assertNotEquals(null, newAsset.get('eHS_Source_System_Id__c'));
         }
       }
+      if (hasPicklistValue('Asset', 'eHS_Status__c', 'In Progress')) {
+        for (SObject newAsset : newAssets) {
+          System.assertEquals('In Progress', newAsset.get('eHS_Status__c'));
+        }
+      }
+      if (
+        hasPicklistValue(
+          'Asset',
+          'eHS_Asset_Type__c',
+          'eHS Provider Initiative'
+        )
+      ) {
+        for (SObject newAsset : newAssets) {
+          System.assertEquals(
+            'eHS Provider Initiative',
+            newAsset.get('eHS_Asset_Type__c')
+          );
+        }
+      }
     }
 
     assertAccountRelationshipRoles(facility.Id, result.newAccountId);
+  }
+
+  @IsTest
+  static void closeFacilityEndsAccountAndRelatedAssets() {
+    Account facility = [
+      SELECT Id
+      FROM Account
+      WHERE Name = :OLD_ACCOUNT_NAME
+      LIMIT 1
+    ];
+    Date requestedEndDate = Date.today().addDays(10);
+    DeepCloneController.CloseFacilityRequest request = new DeepCloneController.CloseFacilityRequest();
+    request.endDate = requestedEndDate;
+
+    DeepCloneController.bypassFacilityCheckForTests = true;
+    Test.startTest();
+    DeepCloneController.CloneResult result = DeepCloneController.closeFacility(
+      facility.Id,
+      request
+    );
+    Test.stopTest();
+
+    System.assertEquals('Facility closed successfully.', result.message);
+    SObject closedFacility = queryAccount(facility.Id);
+    System.assertEquals(false, closedFacility.get('IsActive'));
+    if (hasField('Account', 'EndDate')) {
+      System.assertEquals(
+        requestedEndDate,
+        dateValue(closedFacility.get('EndDate'))
+      );
+    }
+    if (hasField('Account', 'eHS_Status__c')) {
+      System.assertEquals('Closed', closedFacility.get('eHS_Status__c'));
+    }
+    if (hasField('Account', 'eHS_WDFA__c')) {
+      System.assertEquals(null, closedFacility.get('eHS_WDFA__c'));
+    }
+    if (hasField('Account', 'eHS_Facility_Id__c')) {
+      System.assertEquals(null, closedFacility.get('eHS_Facility_Id__c'));
+    }
+    if (hasField('Account', 'eHS_ACPNumber__c')) {
+      System.assertEquals(null, closedFacility.get('eHS_ACPNumber__c'));
+    }
+    if (hasField('Account', 'eHS_Source_System_Id__c')) {
+      System.assertEquals(null, closedFacility.get('eHS_Source_System_Id__c'));
+    }
+    if (hasObject('Identifier')) {
+      System.assertEquals(true, hasIdentifierUsage(facility.Id, 'DSR - WDFA'));
+      System.assertEquals(
+        true,
+        hasIdentifierUsage(facility.Id, 'DSR - Facility ID')
+      );
+      System.assertEquals(
+        true,
+        hasIdentifierUsage(facility.Id, 'DSR - ACP Number')
+      );
+      System.assertEquals(true, hasIdentifierUsage(facility.Id, 'DSR - ID'));
+    }
+    if (hasObject('Asset')) {
+      for (SObject asset : queryAssets(facility.Id)) {
+        if (hasField('Asset', 'UsageEndDate')) {
+          System.assertEquals(requestedEndDate, asset.get('UsageEndDate'));
+        }
+        if (isFieldReadable('Asset', 'eHS_Source_System_Id__c')) {
+          System.assertNotEquals(
+            null,
+            asset.get('eHS_Source_System_Id__c'),
+            'Close Facility should not clear child source-system ids.'
+          );
+        }
+      }
+    }
+  }
+
+  @IsTest
+  static void closeFacilityRequiresStartDateBeforeEndDate() {
+    Account facility = new Account(Name = 'Close Facility Missing Start Date');
+    Id facilityRecordTypeId = findFacilityRecordTypeId();
+    if (facilityRecordTypeId != null) {
+      facility.RecordTypeId = facilityRecordTypeId;
+    }
+    putIfWriteable(facility, 'IsActive', true, true);
+    insert facility;
+
+    DeepCloneController.CloseFacilityRequest request = new DeepCloneController.CloseFacilityRequest();
+    request.endDate = Date.today().addDays(5);
+    DeepCloneController.bypassFacilityCheckForTests = true;
+    try {
+      DeepCloneController.closeFacility(facility.Id, request);
+      System.assert(false, 'A Facility without Start Date should not close.');
+    } catch (Exception ex) {
+      System.assert(
+        ex.getMessage().contains('Enter Start Date first'),
+        ex.getMessage()
+      );
+    }
+
+    Account seededFacility = [
+      SELECT Id
+      FROM Account
+      WHERE Name = :OLD_ACCOUNT_NAME
+      LIMIT 1
+    ];
+    Date startDate = dateValue(queryAccount(seededFacility.Id).get('EffectiveDate'));
+    request.endDate = startDate;
+    try {
+      DeepCloneController.closeFacility(seededFacility.Id, request);
+      System.assert(false, 'End Date equal to Start Date should not close.');
+    } catch (Exception ex) {
+      System.assert(
+        ex.getMessage().contains('End Date must be after Start Date'),
+        ex.getMessage()
+      );
+    }
   }
 
   @IsTest
@@ -551,9 +684,19 @@ private class DeepCloneControllerTest {
     }
 
     SObject parentAsset = Schema.getGlobalDescribe().get('Asset').newSObject();
+    Id assetRecordTypeId = findAssetRecordTypeId();
+    if (assetRecordTypeId != null) {
+      putIfWriteable(parentAsset, 'RecordTypeId', assetRecordTypeId, true);
+    }
     putIfWriteable(parentAsset, 'Name', 'Parent Asset', true);
     putIfWriteable(parentAsset, 'AccountId', accountId, true);
     putIfWriteable(parentAsset, 'Status', 'Installed', true);
+    putIfWriteable(
+      parentAsset,
+      'eHS_Asset_Type__c',
+      'eHS Provider Initiative',
+      true
+    );
     putIfWriteable(
       parentAsset,
       'eHS_Source_System_Id__c',
@@ -567,10 +710,19 @@ private class DeepCloneControllerTest {
     }
 
     SObject childAsset = Schema.getGlobalDescribe().get('Asset').newSObject();
+    if (assetRecordTypeId != null) {
+      putIfWriteable(childAsset, 'RecordTypeId', assetRecordTypeId, true);
+    }
     putIfWriteable(childAsset, 'Name', 'Child Asset', true);
     putIfWriteable(childAsset, 'AccountId', accountId, true);
     putIfWriteable(childAsset, 'ParentId', parentAsset.get('Id'), true);
     putIfWriteable(childAsset, 'Status', 'Installed', true);
+    putIfWriteable(
+      childAsset,
+      'eHS_Asset_Type__c',
+      'eHS Provider Initiative',
+      true
+    );
     putIfWriteable(
       childAsset,
       'eHS_Source_System_Id__c',
@@ -620,7 +772,9 @@ private class DeepCloneControllerTest {
       'ParentId',
       'UsageEndDate',
       'InstallDate',
-      'eHS_Source_System_Id__c'
+      'eHS_Source_System_Id__c',
+      'eHS_Asset_Type__c',
+      'eHS_Status__c'
     };
     List<String> validFields = new List<String>();
     for (String fieldName : fields) {
@@ -842,6 +996,21 @@ private class DeepCloneControllerTest {
     return recordTypes.isEmpty() ? null : recordTypes[0].Id;
   }
 
+  private static Id findAssetRecordTypeId() {
+    if (!hasObject('Asset')) {
+      return null;
+    }
+    List<RecordType> recordTypes = [
+      SELECT Id
+      FROM RecordType
+      WHERE SObjectType = 'Asset'
+      AND DeveloperName IN ('eHS_Initiatives_and_HIS', 'eHS_PIA', 'eHS_pORA')
+      ORDER BY DeveloperName
+      LIMIT 1
+    ];
+    return recordTypes.isEmpty() ? null : recordTypes[0].Id;
+  }
+
   private static Date dateValue(Object value) {
     if (value instanceof Date) {
       return (Date) value;
@@ -892,6 +1061,15 @@ private class DeepCloneControllerTest {
       }
     }
     return false;
+  }
+
+  private static Boolean hasPicklistValue(
+    String objectName,
+    String fieldName,
+    String value
+  ) {
+    return hasField(objectName, fieldName) &&
+      picklistContains(getFieldDescribe(objectName, fieldName), value);
   }
 
   private static Boolean hasObject(String objectName) {

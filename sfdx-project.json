@@ -6,7 +6,7 @@
       "package": "Deep Clone",
       "versionName": "Deep Clone 1.0",
       "versionNumber": "1.0.0.NEXT",
-      "versionDescription": "Adds Facility name, address, start date, and end date replacement values to Deep Clone."
+      "versionDescription": "Adds Facility action selection, Close Facility processing, and Deep Clone Asset status handling."
     },
     {
       "path": "force-app",
@@ -24,6 +24,7 @@
     "Deep Clone@1.0.0-18": "04tg7000000BMoPAAW",
     "Deep Clone@1.0.0-19": "04tg7000000BN1JAAW",
     "Deep Clone@1.0.0-20": "04tg7000000BNCbAAO",
-    "Deep Clone@1.0.0-21": "04tg7000000BNanAAG"
+    "Deep Clone@1.0.0-21": "04tg7000000BNanAAG",
+    "Deep Clone@1.0.0-22": "04tg7000000BPhRAAW"
   }
 }

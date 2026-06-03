@@ -4,8 +4,29 @@ import { LightningElement, api, wire } from "lwc";
 import { CloseActionScreenEvent } from "lightning/actions";
 import { CurrentPageReference, NavigationMixin } from "lightning/navigation";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import { notifyRecordUpdateAvailable } from "lightning/uiRecordApi";
 import getContext from "@salesforce/apex/DeepCloneController.getContext";
 import cloneFacility from "@salesforce/apex/DeepCloneController.cloneFacility";
+import closeFacility from "@salesforce/apex/DeepCloneController.closeFacility";
+
+const ACTION_CLOSE = "closeFacility";
+const ACTION_DEEP_CLONE = "deepClone";
+const SCREEN_ACTION = "action";
+const SCREEN_CLOSE = "close";
+const SCREEN_DEEP_CLONE = "deepClone";
+
+const ACTION_OPTIONS = [
+  {
+    value: ACTION_CLOSE,
+    label: "Close Facility",
+    description: "Close this Facility and end its related records."
+  },
+  {
+    value: ACTION_DEEP_CLONE,
+    label: "Deep Clone",
+    description: "Create a replacement Facility with carried-forward records."
+  }
+];
 
 const STEP_LABELS = [
   "Facility",
@@ -138,8 +159,14 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
   };
 
   context;
+  selectedAction = "";
+  screen = SCREEN_ACTION;
+  closeForm = {
+    endDate: ""
+  };
   isLoading = true;
   isCloning = false;
+  isClosing = false;
   loadError;
   cloneError;
   activeStepIndex = 0;
@@ -199,6 +226,27 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   get accountName() {
     return this.context?.accountName || "Account";
+  }
+
+  get panelHeader() {
+    if (this.showDeepCloneForm) {
+      return "Deep Clone";
+    }
+    if (this.showCloseFacilityForm) {
+      return "Close Facility";
+    }
+    return "Facility Action";
+  }
+
+  get isBusy() {
+    return this.isCloning || this.isClosing;
+  }
+
+  get actionOptions() {
+    return ACTION_OPTIONS.map((option) => ({
+      ...option,
+      checked: this.selectedAction === option.value
+    }));
   }
 
   /**
@@ -272,6 +320,22 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     return !this.isLoading && !this.loadError && !this.isBlocked;
   }
 
+  get showActionChoice() {
+    return this.showForm && this.screen === SCREEN_ACTION;
+  }
+
+  get showDeepCloneForm() {
+    return this.showForm && this.screen === SCREEN_DEEP_CLONE;
+  }
+
+  get showCloseFacilityForm() {
+    return this.showForm && this.screen === SCREEN_CLOSE;
+  }
+
+  get closeStartDate() {
+    return this.context?.startDate || "";
+  }
+
   /**
    * Purpose: Formats the record type message shown when a user opens Deep Clone on a non-Facility Account.
    */
@@ -291,13 +355,21 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     return QUESTION_FIELDS.some(({ toggleField }) => this.form[toggleField]);
   }
 
+  get hasSelectedAction() {
+    return !!this.selectedAction;
+  }
+
+  get isNextDisabled() {
+    return this.isBusy || !this.hasSelectedAction;
+  }
+
   /**
    * Purpose: Disables the Start button while loading, cloning, blocked by record type, or no slider is selected.
    */
   get isStartDisabled() {
     return (
       this.isLoading ||
-      this.isCloning ||
+      this.isBusy ||
       this.isBlocked ||
       !this.hasSelectedChange
     );
@@ -384,7 +456,7 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       ) {
         this.isLoading = false;
         this.loadError =
-          "Unable to determine the Account record for this Deep Clone action. Launch it from an Account record page.";
+          "Unable to determine the Account record for this Facility action. Launch it from an Account record page.";
       }
     });
   }
@@ -394,6 +466,20 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
    */
   clearMissingRecordIdValidation() {
     this.missingRecordIdValidationKey += 1;
+  }
+
+  handleActionToggle(event) {
+    this.selectedAction = event.target.checked ? event.target.dataset.action : "";
+    this.cloneError = undefined;
+  }
+
+  handleNext() {
+    if (!this.selectedAction) {
+      return;
+    }
+    this.cloneError = undefined;
+    this.screen =
+      this.selectedAction === ACTION_CLOSE ? SCREEN_CLOSE : SCREEN_DEEP_CLONE;
   }
 
   /**
@@ -417,6 +503,15 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
       [field]: event.target.value
     };
     this.clearCustomValidity();
+  }
+
+  handleCloseInput(event) {
+    this.closeForm = {
+      ...this.closeForm,
+      [event.target.dataset.field]: event.target.value
+    };
+    this.cloneError = undefined;
+    this.validateCloseEndDate(true);
   }
 
   /**
@@ -473,6 +568,33 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     }
   }
 
+  async handleFinish() {
+    this.cloneError = undefined;
+    if (!this.validateClose()) {
+      return;
+    }
+
+    this.isClosing = true;
+    try {
+      const result = await closeFacility({
+        recordId: this.recordId,
+        request: this.buildCloseRequest()
+      });
+      await notifyRecordUpdateAvailable([{ recordId: this.recordId }]);
+      this.showToast(
+        "Facility closed",
+        result?.message || "The Facility has been closed.",
+        "success"
+      );
+      this.dispatchEvent(new CloseActionScreenEvent());
+    } catch (error) {
+      this.cloneError = this.normalizeError(error);
+      this.showToast("Close Facility failed", this.cloneError, "error");
+    } finally {
+      this.isClosing = false;
+    }
+  }
+
   /**
    * Purpose: Closes the quick action modal when the user cancels.
    */
@@ -492,13 +614,19 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     return request;
   }
 
+  buildCloseRequest() {
+    return {
+      endDate: this.closeForm.endDate || null
+    };
+  }
+
   /**
    * Purpose: Performs client-side checks so Apex is not called without an Account Id or required new values.
    */
   validate() {
     if (!this.recordId) {
       this.cloneError =
-        "Account Id is required. Launch Deep Clone from an Account record page.";
+        "Account Id is required. Launch this action from an Account record page.";
       return false;
     }
 
@@ -511,6 +639,40 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
     }
 
     return this.reportInputsValidity() && isValid;
+  }
+
+  validateClose() {
+    if (!this.recordId) {
+      this.cloneError =
+        "Account Id is required. Launch this action from an Account record page.";
+      return false;
+    }
+
+    this.clearCustomValidity();
+    const hasValidEndDate = this.validateCloseEndDate(false);
+    return this.reportInputsValidity() && hasValidEndDate;
+  }
+
+  validateCloseEndDate(report) {
+    const input = this.closeEndDateInput;
+    if (!input) {
+      return true;
+    }
+
+    let message = "";
+    if (this.closeForm.endDate) {
+      if (!this.closeStartDate) {
+        message = "Enter Start Date first on the Facility.";
+      } else if (this.closeForm.endDate <= this.closeStartDate) {
+        message = "End Date must be after Start Date.";
+      }
+    }
+
+    input.setCustomValidity(message);
+    if (report) {
+      input.reportValidity();
+    }
+    return !message;
   }
 
   clearCustomValidity() {
@@ -550,6 +712,10 @@ export default class DeepClone extends NavigationMixin(LightningElement) {
 
   get addressInput() {
     return this.template.querySelector("lightning-input-address");
+  }
+
+  get closeEndDateInput() {
+    return this.template.querySelector('lightning-input[data-field="endDate"]');
   }
 
   /**

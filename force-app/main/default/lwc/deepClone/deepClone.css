@@ -69,6 +69,28 @@ h3 {
   gap: 0.25rem;
 }
 
+.action-options,
+.close-form {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.action-row {
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid #d8dde6;
+  border-radius: 0.25rem;
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: 3rem 1fr;
+  min-height: 3.25rem;
+  padding: 0.45rem 0.65rem;
+}
+
+.action-copy {
+  min-width: 0;
+}
+
 .question-row {
   background: #ffffff;
   border: 1px solid #d8dde6;

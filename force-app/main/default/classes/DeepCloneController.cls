@@ -86,6 +86,11 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     public String newDsrId { get; set; }
   }
 
+  public class CloseFacilityRequest {
+    @AuraEnabled
+    public Date endDate { get; set; }
+  }
+
   public class CloneContext {
     @AuraEnabled
     public Id accountId { get; set; }
@@ -306,6 +311,21 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     }
   }
 
+  @AuraEnabled
+  public static CloneResult closeFacility(
+    Id recordId,
+    CloseFacilityRequest request
+  ) {
+    try {
+      return runCloseFacility(recordId, request);
+    } catch (Exception ex) {
+      if (Test.isRunningTest()) {
+        throw ex;
+      }
+      throw new AuraHandledException(formatCloseFailureMessage(ex));
+    }
+  }
+
   /**
    * Purpose: Runs the shared Deep Clone transaction used by both the LWC and Integration Procedure entry points.
    */
@@ -370,10 +390,6 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       setUpdateValue(oldAccountUpdate, 'eHS_Status__c', 'Closed');
       setUpdateValue(oldAccountUpdate, 'IsActive', false);
       setUpdateValue(oldAccountUpdate, 'HealthCloudGA__Active__c', 'No');
-      setUpdateValue(oldAccountUpdate, 'eHS_WDFA__c', null);
-      setUpdateValue(oldAccountUpdate, 'eHS_Facility_Id__c', null);
-      setUpdateValue(oldAccountUpdate, 'eHS_ACPNumber__c', null);
-      setUpdateValue(oldAccountUpdate, 'eHS_Source_System_Id__c', null);
       saveRecords(
         new List<SObject>{ oldAccountUpdate },
         true,
@@ -474,6 +490,126 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       }
 
       result.message = 'Deep Clone completed successfully.';
+      return result;
+    } catch (Exception ex) {
+      Database.rollback(savepoint);
+      throw ex;
+    }
+  }
+
+  /**
+   * Purpose: Closes the selected Facility without creating a replacement Facility.
+   */
+  private static CloneResult runCloseFacility(
+    Id recordId,
+    CloseFacilityRequest request
+  ) {
+    if (recordId == null) {
+      throw new CloneException('Account Id is required.');
+    }
+
+    Savepoint savepoint = Database.setSavepoint();
+    try {
+      validateCloseFacilityRequest(request);
+
+      Datetime nowValue = Datetime.now();
+      CloneResult result = new CloneResult();
+      result.steps = new List<CloneStep>();
+
+      SObject account = querySingleRecord(
+        ACCOUNT_OBJECT,
+        recordId,
+        getCloneQueryFields(ACCOUNT_OBJECT)
+      );
+      ensureFacilityRecordType(account);
+      validateCloseFacilityDates(account, request.endDate);
+
+      String identifierAuthoritySourceSystemId = buildIdentifierAuthoritySourceSystemId(
+        account
+      );
+      List<SObject> identifiers = buildIdentifierRecords(
+        account,
+        buildCloseIdentifierRequest(),
+        nowValue,
+        identifierAuthoritySourceSystemId
+      );
+      updateIdentifierAuthoritySourceSystemId(
+        recordId,
+        identifiers,
+        identifierAuthoritySourceSystemId
+      );
+      IdentifierHistoryChanges identifierChanges = prepareIdentifierHistoryChanges(
+        identifiers
+      );
+      saveRecords(
+        identifierChanges.recordsToUpdate,
+        true,
+        'ending existing identifier history'
+      );
+      saveRecords(
+        identifierChanges.recordsToInsert,
+        false,
+        'creating identifier history'
+      );
+
+      SObject accountUpdate = newSObject(ACCOUNT_OBJECT);
+      accountUpdate.put('Id', recordId);
+      setUpdateDateValue(accountUpdate, 'EndDate', request.endDate);
+      setUpdateValue(accountUpdate, 'eHS_Status__c', 'Closed');
+      setUpdateValue(accountUpdate, 'IsActive', false);
+      setUpdateValue(accountUpdate, 'HealthCloudGA__Active__c', 'No');
+      saveRecords(
+        new List<SObject>{ accountUpdate },
+        true,
+        'closing the facility'
+      );
+
+      result.steps.add(new CloneStep('Facility', 1));
+      result.steps.add(
+        new CloneStep('Identifiers', identifierChanges.totalCount())
+      );
+      result.steps.add(
+        new CloneStep(
+          'Care Program Team Members',
+          closeExistingChildren(
+            buildCareProgramTeamMemberConfig(),
+            recordId,
+            request.endDate,
+            nowValue,
+            false
+          )
+        )
+      );
+      result.steps.add(
+        new CloneStep(
+          'Healthcare Practitioner Facilities',
+          closeExistingChildren(
+            buildHealthcarePractitionerFacilityConfig(),
+            recordId,
+            request.endDate,
+            nowValue,
+            false
+          )
+        )
+      );
+      result.steps.add(
+        new CloneStep(
+          'Assets',
+          closeExistingChildren(
+            buildAssetConfig(),
+            recordId,
+            request.endDate,
+            nowValue,
+            false
+          )
+        )
+      );
+
+      if (forceFailureForTests) {
+        throw new CloneException('Forced rollback test failure.');
+      }
+
+      result.message = 'Facility closed successfully.';
       return result;
     } catch (Exception ex) {
       Database.rollback(savepoint);
@@ -1349,6 +1485,20 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
+   * Purpose: Formats close failures consistently for the Close Facility LWC flow.
+   */
+  private static String formatCloseFailureMessage(Exception ex) {
+    String message = ex == null ? null : ex.getMessage();
+    if (String.isBlank(message)) {
+      message = 'Unexpected error.';
+    }
+    if (message.startsWith('Close Facility failed.')) {
+      return message;
+    }
+    return 'Close Facility failed. All changes were rolled back. ' + message;
+  }
+
+  /**
    * Purpose: Validates that the LWC sent a request and that every changed identifier includes a new value.
    */
   private static void validateRequest(CloneRequest request) {
@@ -1379,6 +1529,32 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       'ACP Number'
     );
     requireNewValue(request.dsrIdChanging, request.newDsrId, 'DSR ID');
+  }
+
+  private static void validateCloseFacilityRequest(
+    CloseFacilityRequest request
+  ) {
+    if (request == null) {
+      throw new CloneException('Close Facility request is required.');
+    }
+    if (request.endDate == null) {
+      throw new CloneException('End Date is required.');
+    }
+  }
+
+  private static void validateCloseFacilityDates(
+    SObject account,
+    Date endDate
+  ) {
+    Date startDate = getDate(account, 'EffectiveDate');
+    if (startDate == null) {
+      throw new CloneException(
+        'Enter Start Date first on the Facility before closing it.'
+      );
+    }
+    if (endDate <= startDate) {
+      throw new CloneException('End Date must be after Start Date.');
+    }
   }
 
   /**
@@ -1515,6 +1691,15 @@ global with sharing class DeepCloneController implements Callable, Queueable {
       authoritySourceSystemId
     );
     return identifiers;
+  }
+
+  private static CloneRequest buildCloseIdentifierRequest() {
+    CloneRequest request = new CloneRequest();
+    request.wdfaChanging = true;
+    request.facilityIdChanging = true;
+    request.acpNumberChanging = true;
+    request.dsrIdChanging = true;
+    return request;
   }
 
   /**
@@ -1984,6 +2169,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     config.endFields.add('UsageEndDate');
     config.startFields.add('InstallDate');
     config.cloneClearFields.add('UsageEndDate');
+    config.newValues.put('eHS_Asset_Type__c', 'eHS Provider Initiative');
+    config.newValues.put('eHS_Status__c', 'In Progress');
     config.hierarchyClone = true;
     return config;
   }
@@ -2029,7 +2216,8 @@ global with sharing class DeepCloneController implements Callable, Queueable {
         config,
         oldRow,
         oldEndDate,
-        nowValue
+        nowValue,
+        true
       );
       updates.add(oldUpdate);
 
@@ -2062,6 +2250,41 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     );
     saveFeedItems(feedItems, oldAccountId);
     return inserts.size();
+  }
+
+  /**
+   * Purpose: Ends existing child records without cloning them.
+   */
+  private static Integer closeExistingChildren(
+    ChildCloneConfig config,
+    Id accountId,
+    Date endDate,
+    Datetime nowValue,
+    Boolean clearSourceSystemId
+  ) {
+    if (!canCloneObject(config)) {
+      return 0;
+    }
+
+    List<SObject> oldRows = queryChildRecords(config, accountId);
+    if (oldRows.isEmpty()) {
+      return 0;
+    }
+
+    List<SObject> updates = new List<SObject>();
+    for (SObject oldRow : oldRows) {
+      updates.add(
+        buildOldChildUpdate(
+          config,
+          oldRow,
+          endDate,
+          nowValue,
+          clearSourceSystemId
+        )
+      );
+    }
+    saveRecords(updates, true, 'ending ' + config.objectName + ' records');
+    return updates.size();
   }
 
   /**
@@ -2196,7 +2419,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     Set<Id> oldAssetIds = new Set<Id>();
     for (SObject asset : oldAssets) {
       oldAssetIds.add((Id) asset.get('Id'));
-      updates.add(buildOldChildUpdate(config, asset, oldEndDate, nowValue));
+      updates.add(
+        buildOldChildUpdate(config, asset, oldEndDate, nowValue, true)
+      );
       addSourceSystemFeed(
         feedItems,
         asset,
@@ -2352,13 +2577,14 @@ global with sharing class DeepCloneController implements Callable, Queueable {
   }
 
   /**
-   * Purpose: Builds the update row that closes an old child record and clears its external id.
+   * Purpose: Builds the update row that closes an old child record and optionally clears its external id.
    */
   private static SObject buildOldChildUpdate(
     ChildCloneConfig config,
     SObject oldRow,
     Date today,
-    Datetime nowValue
+    Datetime nowValue,
+    Boolean clearSourceSystemId
   ) {
     SObject oldUpdate = newSObject(config.objectName);
     oldUpdate.put('Id', oldRow.get('Id'));
@@ -2375,7 +2601,9 @@ global with sharing class DeepCloneController implements Callable, Queueable {
     for (String fieldName : config.oldValues.keySet()) {
       setUpdateValue(oldUpdate, fieldName, config.oldValues.get(fieldName));
     }
-    setUpdateValue(oldUpdate, 'eHS_Source_System_Id__c', null);
+    if (clearSourceSystemId == true) {
+      setUpdateValue(oldUpdate, 'eHS_Source_System_Id__c', null);
+    }
     return oldUpdate;
   }
 
