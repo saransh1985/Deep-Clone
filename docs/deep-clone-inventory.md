@@ -53,4 +53,4 @@ The `docs/inventory` folder contains raw JSON evidence for:
 
 `docs/deep-clone-test-results.txt` contains the saved EHDATA test result for `DeepCloneControllerTest`.
 
-The manifest was also validated with a dry-run deploy against EHDATA. The validation succeeded with deploy id `0AfAw00000OB3WFKA1`.
+The manifest was also validated with a dry-run deploy against EHDATA. The validation succeeded.
