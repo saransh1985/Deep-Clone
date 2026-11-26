@@ -2,13 +2,6 @@
 
 Standalone Salesforce DX snapshot of the EHDATA Deep Clone implementation for Account record type `Facility`.
 
-## Source Org
-
-- Org alias: `ehdata`
-- Username: `saransh.bharadwaj@ah2nd.org.ehdata`
-- Org Id: `00DAw00000DxYnlMAF`
-- Retrieved on: 2026-06-02
-
 ## Included Metadata
 
 - Account quick action: `Account.Deep_Clone`
@@ -38,15 +31,13 @@ The EHDATA test run passed:
 - Tests run: 12
 - Pass rate: 100%
 - Controller coverage: 80%
-- Test run id: `707Aw00001KpRoZ`
 - Dry-run deploy validation: succeeded
-- Dry-run deploy id: `0AfAw00000OB3WFKA1`
 
 Saved evidence is in `docs/deep-clone-test-results.txt`.
 
 ## Inventory
 
-Read `docs/deep-clone-inventory.md` for the high-level inventory. Raw SOQL/Tooling query outputs are stored in `docs/inventory/`.
+Read `docs/deep-clone-inventory.md` for the high-level inventory.
 
 ## Deploy Command
 
