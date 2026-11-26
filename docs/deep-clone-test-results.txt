@@ -1,9 +1,6 @@
 DeepCloneControllerTest validation
 
 Source org: ehdata
-Org Id: 00DAw00000DxYnlMAF
-Username: saransh.bharadwaj@ah2nd.org.ehdata
-Test run id: 707Aw00001KpRoZ
 
 Summary
 
